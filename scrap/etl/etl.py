@@ -1,8 +1,13 @@
-class ETL():
+import findspark
+findspark.init()
+
+from pyspark.sql import SparkSession
+
+class SparkETL():
     datalake_dir = 'datalake'
 
-    def __init__(self, spark):
-        self.spark = spark
+    def __init__(self):
+        self.spark = SparkSession.builder.appName('de-capstone').getOrCreate()
 
     def path(self, filename):
         return f"{self.datalake_dir}/clean/{filename}"
