@@ -1,3 +1,11 @@
+"""
+To import from a Jupyter notebook, execute first inside a cell:
+```
+import findspark
+findspark.init()
+```
+"""
+
 from pyspark.sql import SparkSession, DataFrame
 
 def pipe(self, fn):
@@ -19,12 +27,20 @@ DataFrame.pipe = pipe
 class SparkETL():
     datalake_dir = 'datalake'
 
+    i94_data_dictionary = f"{datalake_dir}/raw/i94_data_dictionary.json"
+
     data_sources = {
-        'states': '../raw/states/us-states-territories.csv'
+        'states': '../raw/states/us-states-territories.csv',
+        'ports': i94_data_dictionary
     }
 
     def __init__(self):
-        self.spark = SparkSession.builder.appName('de-capstone').getOrCreate()
+        self.spark = None
+
+    def get_spark(self):
+        if not self.spark:
+            self.spark = SparkSession.builder.appName('de-capstone').getOrCreate()
+        return self.spark
 
     def path(self, filename):
         return f"{self.datalake_dir}/clean/{filename}"
