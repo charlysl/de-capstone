@@ -63,5 +63,5 @@ class SparkETL():
 
 
     def read_clean_table(self, filename):
-        return self.spark.read.format('parquet').load(self.path(filename))
+        return self.get_spark().read.format('parquet').load(self.path(filename))
 
