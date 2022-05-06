@@ -33,7 +33,8 @@ class SparkETL():
         'states': '../raw/states/us-states-territories.csv',
         'ports': i94_data_dictionary,
         'airports': '../../airport-codes_csv.csv',
-        'demographics': '../../us-cities-demographics.csv'
+        'demographics': '../../us-cities-demographics.csv',
+        'temperature': '../../GlobalLandTemperaturesByState.csv'
     }
 
     def __init__(self):
