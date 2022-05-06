@@ -31,7 +31,9 @@ class SparkETL():
 
     data_sources = {
         'states': '../raw/states/us-states-territories.csv',
-        'ports': i94_data_dictionary
+        'ports': i94_data_dictionary,
+        'airports': '../../airport-codes_csv.csv',
+        'demographics': '../../us-cities-demographics.csv'
     }
 
     def __init__(self):
