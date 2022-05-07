@@ -8,7 +8,7 @@ findspark.init()
 
 from pyspark.sql import SparkSession, DataFrame
 
-def pipe(self, fn):
+def pipe(self, *args):
     """
     Description: a pandas-like pipe function
 
@@ -18,7 +18,7 @@ def pipe(self, fn):
 
     Output: a Spark Dataframe
     """
-    return fn(self)
+    return args[0](self, *args[1:])
 
 # TODO assert DataFrame does not have pipe method, API might add it
 DataFrame.pipe = pipe
