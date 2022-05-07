@@ -45,26 +45,74 @@ class SparkETL():
             self.spark = SparkSession.builder.appName('de-capstone').getOrCreate()
         return self.spark
 
-    def path(self, filename):
-        return f"{self.datalake_dir}/clean/{filename}"
+    def path(self, filename, kind='clean'):
+        kinds = ('clean', 'dim', 'fact')
+
+        if kind not in kinds:
+            raise ArgumentError(f"bad kind: {kind}")
+
+        return f"{self.datalake_dir}/{kind}/{filename}"
     
     def save_clean_table(self, df, filename, partitions=None):
+        self.save_table(
+            df,
+            filename,
+            'OVERWRITE',
+            partitions,
+            'clean'
+        )
+
+    def init_dim_table(self, df, filename, partitions=None):
+        """
+        Idempotent.
+        """
+        self.save_table(
+            df,
+            filename,
+            'IGNORE',
+            partitions, 
+            'dim'
+        )
+
+    def save_dim_table(self, df, filename, partitions=None):
+        self.save_table(
+            df,
+            filename,
+            'APPEND',
+            partitions, 
+            'dim'
+        )
+
+    def save_table(self, df, filename, mode, partitions, kind):
         """
         Partitioning by year and month would allow other processes
         to write other partitions in parallel.
         """
+        
         df_writer = self.set_partitioning(df.write, partitions)
+        path = self.path(filename, kind)
+
         (
           df_writer
           .format('parquet')
-          .mode('OVERWRITE')
-          .save(self.path(filename))
+          .mode(mode)
+          .save(path)
         )
     
     def set_partitioning(self, df_writer, partitions):
         return df_writer.partitionBy(partitions) if partitions else df_writer
 
+    def read_table(self, filename, kind):
+        return (
+            self
+            .get_spark()
+            .read
+            .format('parquet')
+            .load(self.path(filename, kind))
+        )
 
     def read_clean_table(self, filename):
-        return self.get_spark().read.format('parquet').load(self.path(filename))
+        self.read_table(filename, 'clean')
 
+    def read_dim_table(self, filename):
+        self.read_table(filename, 'dim')
