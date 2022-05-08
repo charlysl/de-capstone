@@ -30,6 +30,7 @@ class SparkETL():
     i94_data_dictionary = f"{datalake_dir}/raw/i94_data_dictionary.json"
 
     data_sources = {
+        'immigration': '../../immigration_data_sample.csv',
         'states': '../raw/states/us-states-territories.csv',
         'ports': i94_data_dictionary,
         'airports': '../../airport-codes_csv.csv',
@@ -112,7 +113,7 @@ class SparkETL():
         )
 
     def read_clean_table(self, filename):
-        self.read_table(filename, 'clean')
+        return self.read_table(filename, 'clean')
 
     def read_dim_table(self, filename):
-        self.read_table(filename, 'dim')
+        return self.read_table(filename, 'dim')
