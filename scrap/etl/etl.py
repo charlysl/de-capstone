@@ -63,7 +63,7 @@ class SparkETL():
             'clean'
         )
 
-    def init_dim_table(self, df, filename, partitions=None):
+    def init_table(self, df, filename, partitions=None, kind=None):
         """
         Idempotent.
         """
@@ -72,7 +72,24 @@ class SparkETL():
             filename,
             'IGNORE',
             partitions, 
-            'dim'
+            kind
+        )
+
+
+    def init_dim_table(self, df, filename, partitions=None):
+        self.init_table(
+            df,
+            filename,
+            partitions, 
+            kind='dim'
+        )
+
+    def init_fact_table(self, df, filename, partitions=None):
+        self.init_table(
+            df,
+            filename,
+            partitions, 
+            kind='fact'
         )
 
     def save_dim_table(self, df, filename, partitions=None):
@@ -82,6 +99,16 @@ class SparkETL():
             'APPEND',
             partitions, 
             'dim'
+        )
+
+
+    def save_fact_table(self, df, filename, partitions=None):
+        self.save_table(
+            df,
+            filename,
+            'APPEND',
+            partitions, 
+            'fact'
         )
 
     def save_table(self, df, filename, mode, partitions, kind):
@@ -117,3 +144,6 @@ class SparkETL():
 
     def read_dim_table(self, filename):
         return self.read_table(filename, 'dim')
+
+    def read_fact_table(self, filename):
+        return self.read_table(filename, 'fact')
