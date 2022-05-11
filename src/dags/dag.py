@@ -23,12 +23,23 @@ start_pipeline_task = DummyOperator(
 
 start_spark_task = start_spark(dag)
 stop_spark_task = stop_spark(dag)
+
+clean_states_task = create_spark_task(dag, 'clean_states')
+clean_airport_task = create_spark_task(dag, 'clean_airport')
+clean_demographics_task = create_spark_task(dag, 'clean_demographics')
+clean_temperature_task = create_spark_task(dag, 'clean_temperature')
+clean_immigration_task = create_spark_task(
+    dag,
+    'clean_immigration',
+    py_files='dags/spark_jobs/age.py,dags/spark_jobs/stay.py'
+    )
+
 preprocess_i94_data_dictionary_task = (
     create_preprocess_i94_data_dictionary_task(dag)
 )
-clean_states_task = create_spark_task(dag, 'clean_states')
 clean_ports_task = create_spark_task(dag, 'clean_ports')
 clean_country_task = create_spark_task(dag, 'clean_country')
+
 
 end_pipeline_task = DummyOperator(
   task_id='end_pipeline',
@@ -36,11 +47,25 @@ end_pipeline_task = DummyOperator(
 )
 
 start_pipeline_task >> start_spark_task
-start_spark_task >> preprocess_i94_data_dictionary_task
+
 start_spark_task >> clean_states_task
+start_spark_task >> clean_airport_task
+start_spark_task >> clean_demographics_task
+start_spark_task >> clean_temperature_task
+start_spark_task >> clean_immigration_task 
+start_spark_task >> preprocess_i94_data_dictionary_task
+
+clean_states_task >> stop_spark_task
+clean_airport_task >> stop_spark_task
+clean_demographics_task >> stop_spark_task
+clean_temperature_task >> stop_spark_task
+clean_immigration_task >> stop_spark_task
+
 preprocess_i94_data_dictionary_task >> clean_ports_task
 preprocess_i94_data_dictionary_task >> clean_country_task
+
 clean_ports_task >> stop_spark_task
-clean_states_task >> stop_spark_task
 clean_country_task >> stop_spark_task
+clean_immigration_task >> stop_spark_task
+clean_temperature_task
 stop_spark_task >> end_pipeline_task
