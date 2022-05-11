@@ -28,6 +28,7 @@ preprocess_i94_data_dictionary_task = (
 )
 clean_states_task = create_spark_task(dag, 'clean_states')
 clean_ports_task = create_spark_task(dag, 'clean_ports')
+clean_country_task = create_spark_task(dag, 'clean_country')
 
 end_pipeline_task = DummyOperator(
   task_id='end_pipeline',
@@ -38,6 +39,8 @@ start_pipeline_task >> start_spark_task
 start_spark_task >> preprocess_i94_data_dictionary_task
 start_spark_task >> clean_states_task
 preprocess_i94_data_dictionary_task >> clean_ports_task
+preprocess_i94_data_dictionary_task >> clean_country_task
 clean_ports_task >> stop_spark_task
 clean_states_task >> stop_spark_task
+clean_country_task >> stop_spark_task
 stop_spark_task >> end_pipeline_task
