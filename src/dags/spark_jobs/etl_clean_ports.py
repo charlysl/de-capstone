@@ -110,7 +110,7 @@ def split_port_desc(df):
         )
         .withColumn(
             'name',
-            F.expr("trim(regexp_extract('port_desc', '^(.*), ?[A-Z]{2}$', 1))")
+            F.expr("trim(regexp_extract(port_desc, '^(.*), ?[A-Z]{2}$', 1))")
         )
     )
 
