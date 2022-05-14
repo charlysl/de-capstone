@@ -2,16 +2,19 @@ import pyspark.sql.types as T
 import pyspark.sql.functions as F
 
 from etl import SparkETL
+from dim import RouteDim
+
 
 etl = SparkETL()
 spark = etl.get_spark()
+dim_helper = RouteDim()
 
 immigration = etl.read_clean_table('immigration')
 
 def route_nk(df):
     return (
         df
-        .select('airline', 'flight_number', 'port_id')
+        .select(dim_helper.get_nk())
         .drop_duplicates()
     )
 
@@ -23,11 +26,7 @@ def missing_routes(df):
         df
         .join(
             route_dim,
-            on=(
-                (df['airline'] == route_dim['airline'])
-                & (df['flight_number'] == route_dim['flight_number'])
-                & (df['port_id'] == route_dim['port_id'])
-            ),
+            on=dim_helper.on_nk(df, route_dim),
             how='leftanti'
         )
     )
@@ -44,7 +43,7 @@ def coordinate_expr(index):
         """)
 
 def fill_sk(df):
-    return df.withColumn('route_id', F.monotonically_increasing_id())
+    return df.withColumn('route_id', F.expr(dim_helper.gen_sk_expr()))
 
 def fill_airport(df):
     
@@ -135,11 +134,12 @@ def fill_temperature(df):
         .withColumnRenamed('climate', 'dst_state_climate')
     )
 
-def fill_missing_routes(df):
+def fill_missing_routes(df, date):
     return (
         df
-        .pipe(missing_routes)
+        .pipe(SparkETL.filter_one_month, date)
         .pipe(route_nk)
+        .pipe(missing_routes)
         .pipe(fill_sk)
         .pipe(fill_airport)
         .pipe(fill_demographics)
@@ -148,7 +148,7 @@ def fill_missing_routes(df):
     )
 
 etl.save_dim_table(
-    immigration.pipe(fill_missing_routes),
+    immigration.pipe(fill_missing_routes, SparkETL.get_date()),
     'route_dim'
 )
 

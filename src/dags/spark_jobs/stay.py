@@ -5,7 +5,8 @@ class Stay():
         1: '2-7 days',
         2: '8-30 days',
         3: '>30 days',
-        4: 'not departed'
+        4: 'not departed',
+        9: 'UNKNOWN'
     }
 
     day = 0
@@ -13,13 +14,16 @@ class Stay():
     month = 2
     long = 3
     not_departed = 4
+    unknown = 9
     
     def __init__(self, arrdate, depdate):
         self.arrdate = arrdate
         self.depdate = depdate
         
     def group(self):
-        if not self.depdate:
+        if not self.arrdate:
+            return self.unknown
+        elif not self.depdate:
             return self.not_departed
         else:
             self.stay = self.depdate - self.arrdate

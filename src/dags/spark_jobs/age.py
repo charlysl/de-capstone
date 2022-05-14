@@ -7,6 +7,7 @@ class Age():
         3: 'Gen X (40-54)',
         4: 'Boomer (55-75)',
         5: 'Senior (>75)',
+        9: 'UNKNOWN'
     }
 
     infant = 0
@@ -15,23 +16,26 @@ class Age():
     genx = 3
     boomer = 4
     senior = 5
+    unknown = 9
     
     def __init__(self, age):
         self.age = age
         
     def group(self):
-        if self.age <= 7:
-            return self.infant
-        if self.age <= 22:
-            return self.genz
+        if not self.age:
+            return Age.unknown
+        elif self.age <= 7:
+            return Age.infant
+        elif self.age <= 22:
+            return Age.genz
         elif self.age <= 38:
-            return self.millenial
+            return Age.millenial
         elif self.age <=54:
-            return self.genx
+            return Age.genx
         elif self.age <= 75:
-            return self.boomer
+            return Age.boomer
         else:
-            return self.senior
+            return Age.senior
         
     def description(self):
         return self.descriptions[self.group()]

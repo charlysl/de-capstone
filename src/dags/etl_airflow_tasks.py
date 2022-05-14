@@ -12,13 +12,21 @@ def create_preprocess_i94_data_dictionary_task(dag):
         dag=dag
     )
 
-def create_spark_task(dag, name, py_files=None):
+def create_spark_task(dag, name, py_files=None, application_args=["{{ds}}"],
+                        packages=None, repositories=None):
     return SparkSubmitOperator(
         task_id=f"{name}_task",
         conn_id='spark',
         application=f"dags/spark_jobs/etl_{name}.py",
         verbose=True,
         py_files=py_files,
+        application_args=application_args,
+        packages=packages,
+        repositories=repositories,
+        conf={
+            'spark.sql.shuffle.partitions': 5,
+            'spark.executor.memory': '1g'
+        },
         dag=dag
     )
 

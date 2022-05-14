@@ -1,25 +1,23 @@
 import pyspark.sql.functions as F
 
 from etl import SparkETL
+from dim import RouteDim, VisitorDim
+
 
 etl = SparkETL()
 spark = etl.get_spark()
+visitor_helper = VisitorDim()
 
 immigration = etl.read_clean_table('immigration')
-
-visitor_dim_nk = ['citizenship_id', 'residence_id', 'age_id', 'gender_id', 'visa_id', 'stay_id', 'address_id']
 
 def aggregates(df):
     return (
         df
         .withColumn('day', F.expr("DAY(arrival_date)"))
         .groupby(
-            
             'arrival_date', # time_dim nk
-            
-            'airline', 'flight_number', 'port_id', # route_dim nk
-            
-            *visitor_dim_nk
+            *(RouteDim().get_nk()),
+            *(visitor_helper.get_nk())
         )
         .agg(
             F.count('count').alias('num_visitors'),
@@ -79,12 +77,6 @@ def project_route_sk(df):
         .drop('airline', 'flight_number', 'port_id')
     )
 
-def project_visitor_sk_on(df, visitor_dim, keys=visitor_dim_nk):
-    result = (df[visitor_dim_nk[0]] == visitor_dim[visitor_dim_nk[0]])
-    for col in keys[1:]:
-        result = result & (df[col] == visitor_dim[col])
-    return result
-
 def project_visitor_sk(df):
     
     visitor_dim = etl.read_dim_table('foreign_visitor_dim')
@@ -92,11 +84,11 @@ def project_visitor_sk(df):
     return (
         df
         .join(
-            visitor_dim.select('visitor_id', *visitor_dim_nk),
-            project_visitor_sk_on(df, visitor_dim, visitor_dim_nk),
+            visitor_dim.select('visitor_id', *(visitor_helper.get_nk())),
+            visitor_helper.on_nk(df, visitor_dim),
             'inner'
         )
-        .drop(*visitor_dim_nk)
+        .drop(*(visitor_helper.get_nk()))
     )
 
 def project_schema(df):
@@ -105,19 +97,23 @@ def project_schema(df):
     
     return df.select(*column_order)
 
-def flight_fact(df):
+def flight_fact(df, date):
     return (
-        immigration
+        df
+        .pipe(SparkETL.filter_one_month, date)
         .pipe(aggregates)
-        .pipe(replace_null_stddev, 'age_std')
-        .pipe(replace_null_stddev, 'stay_std')
+        #.pipe(replace_null_stddev, 'age_std')
+        #.pipe(replace_null_stddev, 'stay_std')
         .pipe(project_time_sk)
         .pipe(project_route_sk)
         .pipe(project_visitor_sk)
         .pipe(project_schema)
     )
 
-etl.save_fact_table(
-    immigration.pipe(flight_fact),
-    'flight_fact'
-)
+def etl_fact_flight(date):
+    etl.save_fact_table(
+        immigration.pipe(flight_fact, date),
+        'flight_fact'
+    )
+
+etl_fact_flight(SparkETL.get_date())

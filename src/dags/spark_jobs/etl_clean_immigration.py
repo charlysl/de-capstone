@@ -1,74 +1,66 @@
+from pyspark.sql import SparkSession
+
 import pyspark.sql.types as T
 import pyspark.sql.functions as F
 
 from datetime import datetime, timedelta
+import math
 
 from etl import SparkETL
 from age import Age
 from stay import Stay
 
+"""
+CLEANING:
+April's SAS files has 6 extra columns which aren't needed
+- this would prevent us from applyting schema on read
+- the solution it to load without schema
+- enforce schema by projecting with casts before saving parquet
+"""
+
 etl = SparkETL()
-spark = etl.get_spark()
 
-schema = T.StructType([
-    T.StructField('_c0', T.StringType(), True),
-    T.StructField('cicid', T.StringType(), True),
-    T.StructField('i94yr', T.StringType(), True),
-    T.StructField('i94mon', T.StringType(), True),
-    T.StructField('i94cit', T.StringType(), True),
-    T.StructField('i94res', T.StringType(), True),
-    T.StructField('i94port', T.StringType(), True),
-    T.StructField('arrdate', T.FloatType(), True),
-    T.StructField('i94mode', T.FloatType(), True),
-    T.StructField('i94addr', T.StringType(), True),
-    T.StructField('depdate', T.FloatType(), True),
-    T.StructField('i94bir', T.FloatType(), True),
-    T.StructField('i94visa', T.StringType(), True),
-    T.StructField('count', T.FloatType(), True),
-    T.StructField('dtadfile', T.StringType(), True),
-    T.StructField('visapost', T.StringType(), True),
-    T.StructField('occup', T.StringType(), True),
-    T.StructField('entdepa', T.StringType(), True),
-    T.StructField('entdepd', T.StringType(), True),
-    T.StructField('entdepu', T.StringType(), True),
-    T.StructField('matflag', T.StringType(), True),
-    T.StructField('biryear', T.StringType(), True),
-    T.StructField('dtaddto', T.StringType(), True),
-    T.StructField('gender', T.StringType(), True),
-    T.StructField('insnum', T.StringType(), True),
-    T.StructField('airline', T.StringType(), True),
-    T.StructField('admnum', T.StringType(), True),
-    T.StructField('fltno', T.StringType(), True),
-    T.StructField('visatype', T.StringType(), True),
-    
-])
-
-immigration_staging = (
-    spark
-    .read
-    .format('csv')
-    .schema(schema)
-    .option('format', 'csv')
-    .option('header', 'true')
-    .load(etl.data_sources['immigration'])
+spark = (
+    SparkSession
+    .builder
+    .appName("de-capstone")
+    .config('spark.jars.repositories', 'https://repos.spark-packages.org/')
+    .config('spark.jars.packages', 'saurfang:spark-sas7bdat:3.0.0-s_2.12')
+    .getOrCreate()
 )
 
-immigration_staging.limit(1).toPandas()
+dir = '/Users/charly/DataEng2022/de-capstone/data/18-83510-I94-Data-2016'
 
-sas_epoc = datetime(1960, 1, 1)
+def parse_date(date):
+    return datetime.strptime(date, '%Y-%m-%d')
 
-def convert_sas_date(arrdate):
-    return sas_epoc + timedelta(days=arrdate)
+def sas_file_path(date):
+    """
+    Example: 'i94_jan16_sub.sas7bdat'
+    """
+    year = datetime.strftime(date, '%y')
+    month = datetime.strftime(date, '%b').lower()
+    file = f"i94_{month}{year}_sub.sas7bdat"
+    return f"{dir}/{file}"
 
-@F.udf(T.DateType())
-def convert_sas_date_udf(arrdate):
-    return convert_sas_date(arrdate)
+def read_sas_file(path):
+    # see https://stackoverflow.com/questions/35684856/import-pyspark-packages-with-a-regular-jupyter-notebook
+    return (
+        spark
+        .read
+        .format('com.github.saurfang.sas.spark')
+        #.schema(schema)
+        .load(path)
+    )
 
-
-
-@F.udf(T.IntegerType())
-def sas_date_to_day_udf(arrdate):
-    return convert_sas_date(arrdate).day
+def immigration_staging(date):
+    return (
+        read_sas_file(
+            sas_file_path(
+                parse_date(date)
+            )
+        )
+    )
 
 @F.udf(T.IntegerType())
 def convert_age_udf(age):
@@ -81,38 +73,49 @@ def convert_stay_udf(arrdate, depdate):
 def only_air(df):
     return df.where(F.col('i94mode') == 1)
 
+# sas date format epoc is 1st January 1960
+convert_sas_date_expr = "date_add(date('1960-01-01'), cast(arrdate as int))"
+
 def project_schema(df):
     return (
         df
         .select(
-            # partition
-            F.col('i94yr').cast('int').alias('year'),
-            F.col('i94mon').cast('int').alias('month_id'),
-            sas_date_to_day_udf(F.col('arrdate')).alias('day'),
-            convert_sas_date_udf(F.col('arrdate')).alias('arrival_date'),
-            'airline',
-            F.col('fltno').alias('flight_number'),
-            F.col('i94port').alias('port_id'),
-            F.col('i94cit').cast('int').alias('citizenship_id'),
-            F.col('i94res').cast('int').alias('residence_id'),
-            F.col('i94bir').cast('int').alias('age'),
-            convert_age_udf(F.col('i94bir')).alias('age_id'),
-            F.col('gender').alias('gender_id'),
-            F.col('i94visa').cast('int').alias('visa_id'),
-            F.col('i94addr').alias('address_id'),
-            (F.col('depdate') - F.col('arrdate')).cast('int').alias('stay'),
+            F.expr(f"year({convert_sas_date_expr})").alias('year'),
+            F.expr(f"month({convert_sas_date_expr})").alias('month_id'),
+            F.expr(f"day({convert_sas_date_expr})").alias('day'),
+            F.expr(convert_sas_date_expr).alias('arrival_date'),
+            SparkETL.ifnull_str_expr('airline'),
+            SparkETL.ifnull_str_expr('fltno', 'flight_number'),
+            SparkETL.ifnull_str_expr('i94port', 'port_id'),
+            SparkETL.ifnull_num_expr('i94cit', 'citizenship_id'),
+            SparkETL.ifnull_num_expr('i94res', 'residence_id'),
+            F.col('i94bir').cast('int').alias('age'), # not nk, ok if null
+            convert_age_udf(F.expr('cast(i94bir as int)')).cast('int').alias('age_id'),
+            SparkETL.ifnull_str_expr('gender', 'gender_id'),
+            SparkETL.ifnull_num_expr('i94visa', 'visa_id'),
+            SparkETL.ifnull_str_expr('i94addr', 'address_id'),
+            (F.col('depdate') - F.col('arrdate')).cast('int').alias('stay'), # not nk, ok if null
             convert_stay_udf(F.col('arrdate'), F.col('depdate')).alias('stay_id'),
-            'count'
+            F.lit('1').cast('int').alias('count') # take no chances with nulls
         )
 )
 
 def clean_immigration(df):
     return (
-        immigration_staging
+        df
+        #.pipe(SparkETL.filter_one_month, '2016-12-01')
         .pipe(only_air)
         .pipe(project_schema)
     )
 
-immigration = clean_immigration(immigration_staging)
+def save_immigration(df):
+    etl.save_clean_table(
+        clean_immigration(df),
+        'immigration',
+        partitions=['year', 'month_id'],
+        mode='append'
+    )
 
-etl.save_clean_table(immigration, 'immigration', partitions=['year', 'month_id'])
+save_immigration(
+    immigration_staging(
+        SparkETL.get_date()))

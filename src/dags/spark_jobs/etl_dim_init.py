@@ -12,7 +12,7 @@ spark = etl.get_spark()
 dimensions = {
     'time_dim': (
             T.StructType([
-                T.StructField('time_id', T.LongType(), False),
+                T.StructField('time_id', T.StringType(), False), # md5
                 T.StructField('date', T.DateType(), False),
                 T.StructField('year', T.IntegerType(), False),
                 T.StructField('month_id', T.IntegerType(), False),
@@ -26,7 +26,7 @@ dimensions = {
     
     'foreign_visitor_dim': (
             T.StructType([
-                T.StructField('visitor_id', T.LongType(), False),
+                T.StructField('visitor_id', T.StringType(), False), # md5
                 T.StructField('citizenship_id', T.IntegerType(), False),
                 T.StructField('residence_id', T.IntegerType(), False),
                 T.StructField('age_id', T.IntegerType(), False),
@@ -48,7 +48,7 @@ dimensions = {
   
     'route_dim': (
             T.StructType([
-                T.StructField('route_id', T.LongType(), False),
+                T.StructField('route_id', T.StringType(), False), # md5
                 T.StructField('airline', T.StringType(), False),
                 T.StructField('flight_number', T.StringType(), False),
                 T.StructField('port_id', T.StringType(), False),
@@ -93,3 +93,4 @@ def init_dims(dims):
         )
 
 init_dims(dimensions)
+

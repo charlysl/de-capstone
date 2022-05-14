@@ -4,6 +4,7 @@ import pyspark.sql.types as T
 from etl import SparkETL
 from age import Age
 from stay import Stay
+from dim import VisitorDim
 
 """
 Possible (but unlikely) **combinatorial explosion** for foreign_visitor_dim:
@@ -22,45 +23,29 @@ print('potentially num_rows ~= %e' % (200 * 200 * 5 * 3 * 3 * 50 * 4))
 
 etl = SparkETL()
 spark = etl.get_spark()
+dim_helper = VisitorDim()
 
 immigration = etl.read_clean_table('immigration')
 
-visitor_dim = etl.read_dim_table('foreign_visitor_dim')
-
 def visitor_dim_nk(df):
     return (
-        df.select(
-            'citizenship_id',
-            'residence_id',
-            'age_id',
-            'gender_id',
-            'visa_id',
-            'address_id',
-            'stay_id'
-        )
+        df.select(dim_helper.get_nk())
         .drop_duplicates()
     )
 
 def join_immigration_with_visitor_dim(df):
+    
+    visitor_dim = etl.read_dim_table('foreign_visitor_dim')
+    
     return (
         df
         .join(
-            visitor_dim,
-            on=(
-                (df['citizenship_id'] == visitor_dim['citizenship_id'])
-                & (df['residence_id'] == visitor_dim['residence_id'])
-                & (df['age_id'] == visitor_dim['age_id'])
-                & (df['gender_id'] == visitor_dim['gender_id'])
-                & (df['visa_id'] == visitor_dim['visa_id'])
-                & (df['address_id'] == visitor_dim['address_id'])
-                & (df['stay_id'] == visitor_dim['stay_id'])
-            ),
-            how='leftanti'
+            visitor_dim, on=dim_helper.on_nk(df, visitor_dim), how='leftanti'
         )
     )
 
-def fill_pk(df):
-    return df.withColumn('visitor_id', F.monotonically_increasing_id())
+def fill_sk(df):
+    return df.withColumn('visitor_id', F.expr(dim_helper.gen_sk_expr()))
 
 def fill_country(df, country, left_on, alias):
     return (
@@ -159,7 +144,7 @@ def project_schema(df):
         'stay'
     )
 
-def missing_visitor(df):
+def missing_visitor(df, date):
     
     country = etl.read_clean_table('country')
     state = etl.read_clean_table('state')
@@ -167,9 +152,10 @@ def missing_visitor(df):
 
     return (
         immigration
+        .pipe(SparkETL.filter_one_month, date)
         .pipe(visitor_dim_nk)
         .pipe(join_immigration_with_visitor_dim)
-        .pipe(fill_pk)
+        .pipe(fill_sk)
         .pipe(fill_country, country, 'citizenship_id', 'citizenship')
         .pipe(fill_country, country, 'residence_id', 'residence')
         .pipe(fill_age)
@@ -181,7 +167,11 @@ def missing_visitor(df):
         .pipe(project_schema)
     )
 
-etl.save_dim_table(
-    immigration.pipe(missing_visitor),
+def etl_dim_foreign_visitor(date):
+    etl.save_dim_table(
+    immigration.pipe(missing_visitor, date),
     'foreign_visitor_dim'
 )
+
+etl_dim_foreign_visitor(SparkETL.get_date())
+        
