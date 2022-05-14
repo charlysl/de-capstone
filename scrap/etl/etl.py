@@ -7,6 +7,11 @@ findspark.init()
 """
 
 from pyspark.sql import SparkSession, DataFrame
+import pyspark.sql.functions as F
+
+from datetime import datetime
+
+
 
 def pipe(self, *args):
     """
@@ -37,13 +42,18 @@ class SparkETL():
         'demographics': '../../us-cities-demographics.csv',
         'temperature': '../../GlobalLandTemperaturesByState.csv'
     }
-
+    
     def __init__(self):
         self.spark = None
 
     def get_spark(self):
         if not self.spark:
-            self.spark = SparkSession.builder.appName('de-capstone').getOrCreate()
+            self.spark = (
+                SparkSession.builder.appName('de-capstone')
+                .config('spark.sql.shuffle.partitions', 5)
+                .config('spark.executor.memory', '1g')
+                .getOrCreate()
+            )
         return self.spark
 
     def path(self, filename, kind='clean'):
@@ -54,11 +64,11 @@ class SparkETL():
 
         return f"{self.datalake_dir}/{kind}/{filename}"
     
-    def save_clean_table(self, df, filename, partitions=None):
+    def save_clean_table(self, df, filename, partitions=None, mode='OVERWRITE'):
         self.save_table(
             df,
             filename,
-            'OVERWRITE',
+            mode,
             partitions,
             'clean'
         )
@@ -147,3 +157,41 @@ class SparkETL():
 
     def read_fact_table(self, filename):
         return self.read_table(filename, 'fact')
+    
+
+    def date_to_datetime(date):
+        return datetime.strptime(date, '%Y-%m-%d')
+
+    def filter_one_month(df, date):
+        """
+        Filter out the rows that are not in the given year and month.
+        
+        Parameters:
+        - df: an immigration Spark DataFrame
+        - date: a string with format 'YYYY-MM-DD'
+        
+        Returns: a Spark DataFrame with only the rows in the given year and month.
+        """
+
+        dt = SparkETL.date_to_datetime(date)
+
+        return (
+            df
+            .where(
+                (F.col('year') == dt.year)
+                & (F.col('month_id') == dt.month)
+            )
+        )
+    
+    def ifnull_str_expr(col, alias=None):
+        return (
+            F.expr(f"IF({col} IS NULL, 'UNKNOWN', {col})")
+            .alias(alias if alias else col)
+        )
+
+    def ifnull_num_expr(col, alias=None):
+        return (
+            F.expr(f"IF({col} IS NULL, 9999, CAST({col} AS INT))")
+            .alias(alias if alias else col)
+        )
+
