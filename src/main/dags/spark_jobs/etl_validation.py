@@ -64,7 +64,7 @@ class ETLValidationDispatch():
         dfs = self._create_views(
             self._to_array(kwargs['table']),
             self._to_array(kwargs['kind']),
-            kwargs['column']
+            self._to_array(kwargs['column'])
         )
 
         self._invoke_check(kwargs['check'], dfs)
@@ -78,7 +78,7 @@ class ETLValidationDispatch():
         return [(
             SparkETL()
             .read_table(tables[i], kinds[i])
-            .select(columns)
+            .select(*columns)
         ) for i in range(len(tables))]
 
     def _unpack_application_kwargs(self):
@@ -86,7 +86,12 @@ class ETLValidationDispatch():
         return json.loads(self.argv[1])
 
     def _to_array(self, kwarg):
-        return [kwarg] if type(kwarg) == str else kwarg
+        if kwarg == None:
+            return []
+        elif type(kwarg) == str:
+            return [kwarg]
+        else:
+            return kwarg
 
 
 if __name__ == '__main__':

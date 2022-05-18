@@ -6,6 +6,26 @@ from etl_validation import ETLValidationDispatch, ETLValidation
 
 class TestETLValidationDispatch(ETLTestBase):
 
+    def test_dispatch_invalid_one_table_no_column(self):
+        table = 'is_empty'
+
+        self.save_df(
+            self.create_df([]),
+            table
+        )
+
+        args = {}
+        args['check'] = 'check_not_empty'
+        args['table'] = table
+        args['kind'] = 'test'
+        args['column'] = None
+        argv = ['some_path', json.dumps(args)]
+        
+        self.assertRaises(
+            ETLValidation.IsEmptyException,
+            ETLValidationDispatch(argv).dispatch,
+        )
+
     def test_dispatch_invalid_one_table_one_column(self):
         table = 'has_nulls'
 
