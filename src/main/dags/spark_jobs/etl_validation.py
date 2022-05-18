@@ -48,9 +48,6 @@ class ETLValidation():
     def _df_is_empty(df):
         return len(df.head(1)) == 0
 
-    def _handle_failure(self, msg):
-        raise ValueError(f"validation failed: {msg}")
-
 
 class ETLValidationDispatch():
 
