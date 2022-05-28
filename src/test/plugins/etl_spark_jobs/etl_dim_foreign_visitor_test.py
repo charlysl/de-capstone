@@ -14,4 +14,4 @@ class ETLCleanAirportsTest(ETLSparkJobTestBase):
 
         self.spark_job_module = 'etl_spark_jobs.etl_dim_foreign_visitor'
         self.input_file = [ImmigrationFile(), VisitorDimFile(), CountryFile(), StatesFile(), TemperaturesFile()]
-        self.output_file = [VisitorDimFile()]
+        self.output_file = VisitorDimFile()
