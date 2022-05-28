@@ -13,5 +13,6 @@ class PortsToAirportsFile(FileBase):
             "ports_to_airports",
             schema,
             self.curated,
-            coalesce=1
+            coalesce=1,
+            writable=True
         )
