@@ -21,7 +21,7 @@ class ETLSparkJobTestBase(ETLTestBase):
             # unittest would run this test twice, once
             # for this class's subclass, and once for this
             # base class itself. This check prevents the latter,
-            # becuase in that base the fields set by the sub test
+            # because in that base the fields set by the sub test
             # would be missing, for instance 'spark_job_module'.
             return
 

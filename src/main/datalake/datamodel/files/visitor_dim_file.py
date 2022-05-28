@@ -28,7 +28,7 @@ class VisitorDimFile(DimFileBase):
     def __init__(self):
         super().__init__(
             "visitor_dim",
-            schema,
+            schema
         )
 
     nk = ['citizenship_id', 'residence_id', 'age_id', 'gender_id', 'visa_id', 'address_id', 'stay_id']

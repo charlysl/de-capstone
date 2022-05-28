@@ -9,3 +9,4 @@ class ETLInitForeignVisitorDimTest(ETLSparkJobTestBase):
         self.spark_job_module = 'etl_spark_jobs.etl_init_foreign_visitor_dim'
         self.input_file = []
         self.output_file = VisitorDimFile()
+        
