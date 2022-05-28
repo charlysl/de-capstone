@@ -8,5 +8,5 @@ class ETLCleanCountryTest(ETLSparkJobTestBase):
 
     def setUp(self):
         self.spark_job_module = 'etl_spark_jobs.etl_clean_country'
-        self.input_file_class = I94DataDictionaryFile()
-        self.output_file_class = CountryFile()
+        self.input_file = I94DataDictionaryFile()
+        self.output_file = CountryFile()
