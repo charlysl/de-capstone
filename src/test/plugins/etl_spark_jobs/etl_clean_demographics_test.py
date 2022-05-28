@@ -8,5 +8,5 @@ class ETLCleanDemographicsTest(ETLSparkJobTestBase):
 
     def setUp(self):
         self.spark_job_module = 'etl_spark_jobs.etl_clean_demographics'
-        self.input_file_class = RawDemographicsFile()
-        self.output_file_class = AirportsFile()
+        self.input_file = RawDemographicsFile()
+        self.output_file = AirportsFile()
