@@ -7,6 +7,7 @@ import pyspark.sql.functions as F
 
 class ETLValidation():
 
+    class InvalidSchemaException(ValueError): pass
     class IsEmptyException(ValueError): pass
     class HasNullsException(ValueError): pass
     class HasDuplicatesException(ValueError): pass

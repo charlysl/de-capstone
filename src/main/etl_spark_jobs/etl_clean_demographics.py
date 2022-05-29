@@ -126,7 +126,7 @@ def join_ethnicities(df):
 
 def join_state(df):
     
-    state = StatesFile.read()
+    state = StatesFile().read()
 
     return df.join(
         state,

@@ -123,7 +123,7 @@ def clean_states(df):
 
 def join_states(df):
     
-    states = StatesFile.read()
+    states = StatesFile().read()
     
     return (
         df
@@ -142,7 +142,7 @@ def project_schema(df):
     )
 
 def save_temperatures(df):
-    TemperaturesFile.save(df)
+    TemperaturesFile().save(df)
 
 def clean_temperatures():
     return (

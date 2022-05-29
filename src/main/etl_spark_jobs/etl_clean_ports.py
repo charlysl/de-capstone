@@ -5,6 +5,12 @@ from datalake.datamodel.files.i94_data_dictionary_file import I94DataDictionaryF
 from datalake.datamodel.files.ports_file import PortsFile
 from datalake.datamodel.files.states_file import StatesFile
 
+# This isn't required when running the unit test, on a spark-shell,
+# but it prevents an expection when running in a cluster.
+from datalake.utils import spark_helper
+spark_helper.get_spark()
+
+
 def load_i94_data_dictionary():
     return I94DataDictionaryFile().read()
 
