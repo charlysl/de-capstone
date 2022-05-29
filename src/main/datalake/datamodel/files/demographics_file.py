@@ -21,7 +21,8 @@ schema = T.StructType([
 class DemographicsFile(FileBase):
     def __init__(self):
         super().__init__(
-            "us-cities-demographics.csv",
+            "demographics",
             schema,
-            self.raw,
+            self.curated,
+            writable=True
         )

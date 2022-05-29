@@ -20,7 +20,7 @@ schema = T.StructType([
 class RawAirportsFile(FileBase):
     def __init__(self):
         super().__init__(
-            "airports.csv",
+            "airport-codes_csv.csv",
             schema,
             self.raw,
             format='csv',

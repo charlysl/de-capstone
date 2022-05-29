@@ -14,4 +14,5 @@ class TemperaturesFile(FileBase):
             "temperatures",
             schema,
             self.curated,
+            writable=True
         )

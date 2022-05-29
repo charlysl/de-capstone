@@ -3,7 +3,7 @@ import pyspark.sql.types as T
 from datalake.model.file_base import FileBase
 
 schema = T.StructType([
-    T.StructField('state_id', T.IntegerType(), True),
+    T.StructField('state_id', T.StringType(), True),
     T.StructField('name', T.StringType(), True),
     T.StructField('type_id', T.IntegerType(), True),
     T.StructField('type', T.StringType(), True),
