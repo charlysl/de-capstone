@@ -17,7 +17,7 @@ schema = T.StructType([
 class I94DataDictionaryFile(FileBase):
     def __init__(self):
         super().__init__(
-            "i94_data_dictionary",
+            "i94_data_dictionary.json",
             schema,
             self.curated,
             format='json',
