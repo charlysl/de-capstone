@@ -50,6 +50,8 @@ class ETLSparkOperator(SparkSubmitOperator):
         # upload the datalake dependencies to the spark cluster
         kwargs['py_files'] = 'etl_spark_jobs/datalake.zip'
 
+        ETLSparkOperator._add_application_args(kwargs)
+
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -57,3 +59,16 @@ class ETLSparkOperator(SparkSubmitOperator):
         dict = dict if dict else {}
         dict[key] = value
         return dict
+
+    @staticmethod
+    def _add_application_args(kw_args):
+        """
+        From: https://airflow.apache.org/docs/apache-airflow/1.10.12/_api/airflow/contrib/operators/spark_submit_operator/index.h
+        application_args (list) – Arguments for the application being submitted (**templated**)
+        """
+        date = "{{ds}}"
+        if 'application_args' in kw_args:
+            kw_args['application_args'].append(date)
+        else:
+            kw_args['application_args'] = [date]
+

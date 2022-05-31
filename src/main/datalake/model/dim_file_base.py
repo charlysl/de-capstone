@@ -9,7 +9,8 @@ class DimFileBase(FileBase):
             name,
             schema,
             self.production,
-            writable=True
+            writable=True,
+            mode='overwrite'
         )
 
     # static methods

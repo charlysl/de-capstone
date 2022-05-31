@@ -1,6 +1,8 @@
 import datalake.utils.pipe
 from datalake.utils import spark_helper
 
+import importlib
+
 
 class FileBase():
 
@@ -109,3 +111,25 @@ class FileBase():
 
     def _create_empty_dataframe(self):
         return spark_helper.get_spark().createDataFrame([], self.schema)
+
+    @staticmethod
+    def instantiate_file(file_module_class):
+        """
+        Description: instantiate given file class
+
+        Parameters: a string of file's module and class anem
+
+        Returns: an instance of the file class
+
+        Example:
+        file_module_class = 'datalake.datamodel.files.states_file.StatesFile'
+        module_name: 'datalake.datamodel.files.states_file'
+        class_name: 'StatesFile'
+        """
+        module_name = '.'.join(file_module_class.split('.')[:-1])
+        class_name = file_module_class.split('.')[-1]
+        module = importlib.import_module(module_name)
+        file_class = getattr(module, class_name)
+        file = file_class()
+        return file
+
