@@ -1,6 +1,6 @@
 import pyspark.sql.types as T
 
-from datalake.model.file_base import FileBase
+from datalake.model.reference_file_base import ReferenceFileBase
 
 schema = T.StructType([
     T.StructField('state_id', T.StringType(), True),
@@ -9,7 +9,7 @@ schema = T.StructType([
     T.StructField('type', T.StringType(), True),
 ])
 
-class StatesFile(FileBase):
+class StatesFile(ReferenceFileBase):
     def __init__(self):
         super().__init__(
             "states",

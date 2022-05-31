@@ -1,15 +1,15 @@
 import pyspark.sql.types as T
 
-from datalake.model.file_base import FileBase
+from datalake.model.reference_file_base import ReferenceFileBase
 
 schema = T.StructType([
-    T.StructField('state_id', T.IntegerType(), True),
+    T.StructField('state_id', T.StringType(), True),
     T.StructField('city', T.StringType(), True),
-    T.StructField('asian', T.FloatType(), True),
-    T.StructField('black', T.FloatType(), True),
-    T.StructField('latino', T.FloatType(), True),
-    T.StructField('native', T.FloatType(), True),
-    T.StructField('white', T.FloatType(), True),
+    T.StructField('asian', T.DoubleType(), True),
+    T.StructField('black', T.DoubleType(), True),
+    T.StructField('latino', T.DoubleType(), True),
+    T.StructField('native', T.DoubleType(), True),
+    T.StructField('white', T.DoubleType(), True),
     T.StructField('ethnicity_id', T.IntegerType(), True),
     T.StructField('ethnicity', T.StringType(), True),
     T.StructField('population', T.IntegerType(), True),
@@ -18,7 +18,7 @@ schema = T.StructType([
 ])
 
 
-class DemographicsFile(FileBase):
+class DemographicsFile(ReferenceFileBase):
     def __init__(self):
         super().__init__(
             "demographics",

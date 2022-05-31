@@ -11,13 +11,13 @@ schema = T.StructType([
     T.StructField('flight_number', T.StringType(), True),
     T.StructField('port_id', T.StringType(), True),
     T.StructField('citizenship_id', T.IntegerType(), True),
-    T.StructField('residence_id', T.StringType(), True),
-    T.StructField('age', T.StringType(), True),
+    T.StructField('residence_id', T.IntegerType(), True),
+    T.StructField('age', T.IntegerType(), True),
     T.StructField('age_id', T.IntegerType(), True),
     T.StructField('gender_id', T.StringType(), True),
-    T.StructField('visa_id', T.StringType(), True),
+    T.StructField('visa_id', T.IntegerType(), True),
     T.StructField('address_id', T.StringType(), True),
-    T.StructField('stay', T.StringType(), True),
+    T.StructField('stay', T.IntegerType(), True),
     T.StructField('stay_id', T.IntegerType(), True),
     T.StructField('count', T.IntegerType(), True),
 ])
@@ -28,6 +28,7 @@ class ImmigrationFile(FileBase):
         super().__init__(
             "immigration",
             schema,
-            self.curated,
-            partitions=['year', 'month_id']
+            self.staging,
+            partitions=['year', 'month_id'],
+            writable=True
         )

@@ -1,6 +1,6 @@
 import pyspark.sql.types as T
 
-from datalake.model.file_base import FileBase
+from datalake.model.reference_file_base import ReferenceFileBase
 
 schema = T.StructType([
     T.StructField('airport_id', T.StringType(), True),
@@ -14,7 +14,7 @@ schema = T.StructType([
     T.StructField('coordinates', T.StringType(), True)
 ])
 
-class AirportsFile(FileBase):
+class AirportsFile(ReferenceFileBase):
     def __init__(self):
         super().__init__(
             "airports",

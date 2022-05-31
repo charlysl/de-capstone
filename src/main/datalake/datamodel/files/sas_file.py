@@ -5,15 +5,34 @@ from datalake.model.file_base import FileBase
 from datetime import datetime
 
 schema = T.StructType([
-    T.StructField('airport_id', T.StringType(), True),
-    T.StructField('airport_iata', T.StringType(), True),
-    T.StructField('state_id', T.StringType(), True),
-    T.StructField('city', T.StringType(), True),
-    T.StructField('name', T.StringType(), True),
-    T.StructField('international', T.BooleanType(), True),
-    T.StructField('type_id', T.IntegerType(), True),
-    T.StructField('type', T.StringType(), True),
-    T.StructField('coordinates', T.StringType(), True)
+    T.StructField('cicid', T.FloatType(), True),
+    T.StructField('i94yr', T.FloatType(), True),
+    T.StructField('i94mon', T.FloatType(), True),
+    T.StructField('i94cit', T.FloatType(), True),
+    T.StructField('i94res', T.FloatType(), True),
+    T.StructField('i94port', T.StringType(), True),
+    T.StructField('arrdate', T.FloatType(), True),
+    T.StructField('i94mode', T.FloatType(), True),
+    T.StructField('i94addr', T.StringType(), True),
+    T.StructField('depdate', T.FloatType(), True),
+    T.StructField('i94bir', T.FloatType(), True),
+    T.StructField('i94visa', T.FloatType(), True),
+    T.StructField('count', T.FloatType(), True),
+    T.StructField('dtadfile', T.StringType(), True),
+    T.StructField('visapost', T.StringType(), True),
+    T.StructField('occup', T.StringType(), True),
+    T.StructField('entdepa', T.StringType(), True),
+    T.StructField('entdepd', T.StringType(), True),
+    T.StructField('entdepu', T.StringType(), True),
+    T.StructField('matflag', T.StringType(), True),
+    T.StructField('biryear', T.FloatType(), True),
+    T.StructField('dtaddto', T.StringType(), True),
+    T.StructField('gender', T.StringType(), True),
+    T.StructField('insnum', T.StringType(), True),
+    T.StructField('airline', T.StringType(), True),
+    T.StructField('admnum', T.FloatType(), True),
+    T.StructField('fltno', T.StringType(), True),
+    T.StructField('visatype', T.StringType(), True)
 ])
 
 class SasFile(FileBase):

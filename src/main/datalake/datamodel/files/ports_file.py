@@ -1,6 +1,6 @@
 import pyspark.sql.types as T
 
-from datalake.model.file_base import FileBase
+from datalake.model.reference_file_base import ReferenceFileBase
 
 schema = T.StructType([
     T.StructField('port_id', T.StringType(), True),
@@ -8,7 +8,7 @@ schema = T.StructType([
     T.StructField('name', T.StringType(), True),
 ])
 
-class PortsFile(FileBase):
+class PortsFile(ReferenceFileBase):
     def __init__(self):
         super().__init__(
             "ports",

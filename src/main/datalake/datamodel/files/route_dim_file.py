@@ -41,7 +41,7 @@ schema = (
 class RouteDimFile(DimFileBase):
     def __init__(self):
         super().__init__(
-            "visitor_dim",
+            "route_dim",
             schema,
         )
 
