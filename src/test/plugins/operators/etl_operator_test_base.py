@@ -32,7 +32,7 @@ class ETLOperatorTestBase(unittest.TestCase):
     def setUp(self):
         self._setup_test_dag()
         self._setup_airflow_spark_connection()
-        self._mock_datalake_root_variable()
+        self._mock_airflow_variables()
 
     # Helpers
 
@@ -96,10 +96,25 @@ class ETLOperatorTestBase(unittest.TestCase):
         print('spark connection', conn_uri)
         #assert "7077" == BaseHook.get_connection('spark').port
 
-    def _mock_datalake_root_variable(self):
-        key = f'AIRFLOW_VAR_{FileBase.get_datalake_root_key()}'
-        os.environ[key] = self.get_datalake_root()
+    def _mock_airflow_variables(self):
+        ETLOperatorTestBase._mock_airflow_variable(
+            FileBase.get_datalake_root_key(),
+            self.get_datalake_root()
+        )
+        ETLOperatorTestBase._mock_airflow_variable(
+            FileBase.get_staging_root_key(),
+            self.get_staging_root()
+        )
+
+    @staticmethod
+    def _mock_airflow_variable(airflow_key, value):
+        key = f'AIRFLOW_VAR_{airflow_key}'
+        os.environ[key] = value
 
     @staticmethod
     def get_datalake_root():
         return '/tmp/datalake'
+
+    @staticmethod
+    def get_staging_root():
+        return 'hdfs://localhost:9000/staging'

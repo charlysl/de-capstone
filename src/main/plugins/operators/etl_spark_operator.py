@@ -47,6 +47,12 @@ class ETLSparkOperator(SparkSubmitOperator):
             Variable.get('datalake_root')
         )
 
+        kwargs['env_vars'] = self._add_dict_pair(
+            kwargs.get('env_vars'),
+            'STAGING_ROOT',
+            Variable.get('staging_root')
+        )
+
         # upload the datalake dependencies to the spark cluster
         kwargs['py_files'] = 'etl_spark_jobs/datalake.zip'
 

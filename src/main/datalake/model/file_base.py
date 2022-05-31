@@ -1,6 +1,7 @@
 import datalake.utils.pipe
 from datalake.utils import spark_helper
 
+import os
 import importlib
 
 
@@ -11,9 +12,16 @@ class FileBase():
         return 'DATALAKE_ROOT'
 
     @staticmethod
+    def get_staging_root_key():
+        return 'STAGING_ROOT'
+
+    @staticmethod
     def get_datalake_root():
-        import os
         return os.environ[FileBase.get_datalake_root_key()]
+
+    @staticmethod
+    def get_staging_root():
+        return os.environ[FileBase.get_staging_root_key()]
 
     class FileNotWritableException(Exception):
         def __init__(self, file):
@@ -31,6 +39,7 @@ class FileBase():
                 schema,
                 area,
                 datalake_root=None,
+                staging_root=None,
                 format='parquet',
                 writable=False,
                 mode='append',
@@ -49,6 +58,9 @@ class FileBase():
         self.schema = schema
         self.datalake_root = (
             datalake_root if datalake_root else FileBase.get_datalake_root()
+        )
+        self.staging_root = (
+            staging_root if staging_root else FileBase.get_staging_root()
         )
         self.area = area
         self.writable = writable
@@ -97,7 +109,14 @@ class FileBase():
 
     def _path(self, area=None):
         area = area if area else self.area
-        return f"{self.datalake_root}/{area}/{self.name}"
+
+        if area == 'staging':
+            return self._staging_path()
+        else:
+            return f"{self.datalake_root}/{area}/{self.name}"
+
+    def _staging_path(self):
+        return f"{self.staging_root}/{self.name}"
 
     def _set_partitioning(self, df_writer):
         partitions = self.partitions

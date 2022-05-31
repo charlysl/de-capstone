@@ -115,4 +115,5 @@ class FileBaseTests(ETLTestBase):
         file.save(df)
         # exception if fails
 
-
+    def test_hdfs_save(self):
+        pass

@@ -6,7 +6,18 @@ import unittest
 import shutil
 
 import os
+
 os.environ['DATALAKE_ROOT'] = '/tmp/datalake'
+
+#Hadoop must be running locally if staging in HDFS.
+#see: https://towardsdatascience.com/installing-hadoop-on-a-mac-ec01c67b003c
+#
+#Changing hdfs staging root from, say, locahost to 127.0.0.1 can cause
+#connections to be refused
+#see: https://stackoverflow.com/questions/31743586/apache-spark-running-locally-giving-refused-connection-error
+#
+#os.environ['STAGING_ROOT'] = f"{os.environ['DATALAKE_ROOT']}/staging"
+os.environ['STAGING_ROOT'] = 'hdfs://localhost:9000/staging'
 
 import pyspark.sql.types as T
 
@@ -18,6 +29,9 @@ class ETLTestBase(unittest.TestCase):
         # deletion of valuable files.
         if shutil.os.path.exists('/tmp/datalake'):
             shutil.rmtree('/tmp/datalake')
+
+        ETLTestBase._hdfs_teardown()
+
 
     # test helpers
 
@@ -64,3 +78,18 @@ class ETLTestBase(unittest.TestCase):
         Description: save df as parquet file "name" of kind "test"
         """
         df.write.mode('overwrite').save(f"{os.environ['DATALAKE_ROOT']}/{filename}")
+
+    @staticmethod
+    def _hdfs_teardown():
+        """
+        Tried to remove hdfs staging root by using a Python client:
+        ```
+        conda install -c conda-forge python-hdfs
+        ```
+        But getting it to work is non-trivial and I have failed so far,
+        so will have to remove them manually:
+        ```
+        hdfs dfs -rm -f -r /staging 
+        ```
+        """
+        print('WARNING: to teardown staging root run:\nhdfs dfs -rm -f -r /staging')

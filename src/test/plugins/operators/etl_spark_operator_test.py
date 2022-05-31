@@ -22,9 +22,6 @@ class ETLSparkOperatorTest(ETLOperatorTestBase):
         )
 
     def test_etl_spark_operator_read_file(self):
-
-        self._mock_datalake_root_variable()
-
         self._test_task(
             ETLSparkOperator(
                 name='spark_operator_read_file',
