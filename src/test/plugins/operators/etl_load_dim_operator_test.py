@@ -26,6 +26,7 @@ class ETLLoadDimOperatorTest(ETLOperatorTestBase):
 
         self._test_task(
             ETLLoadDimOperator(
+                name='load_test_file',
                 file='TestFile',
                 dag=self.dag
             )
