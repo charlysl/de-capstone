@@ -3,20 +3,15 @@ import pyspark.sql.functions as F
 
 from datalake.datamodel.files.immigration_file import ImmigrationFile
 from datalake.datamodel.files.flight_fact_file import FlightFactFile
-
 from datalake.datamodel.files.route_dim_file import RouteDimFile
-from datalake.datamodel.route_dim import RouteDim
-
 from datalake.datamodel.files.visitor_dim_file import VisitorDimFile
-from datalake.datamodel.visitor_dim import VisitorDim
-
 from datalake.datamodel.files.time_dim_file import TimeDimFile
 
 from datalake.utils import spark_helper
 
 
 def load_immigration():
-    return ImmigrationFile.read()
+    return ImmigrationFile().read()
 
 def aggregates(df):
     return (
@@ -24,8 +19,8 @@ def aggregates(df):
         .withColumn('day', F.expr("DAY(arrival_date)"))
         .groupby(
             'arrival_date', # time_dim nk
-            *(RouteDimFile.get_nk()),
-            *(VisitorDimFile.get_nk())
+            *(RouteDimFile().get_nk()),
+            *(VisitorDimFile().get_nk())
         )
         .agg(
             F.count('count').alias('num_visitors'),
@@ -55,7 +50,7 @@ def replace_null_stddev(df, colname):
 
 def project_time_sk(df):
     
-    time_dim = TimeDimFile.read()
+    time_dim = TimeDimFile().read(area='staging')
     
     return (
         df
@@ -69,7 +64,7 @@ def project_time_sk(df):
 
 def project_route_sk(df):
     
-    route_dim = RouteDimFile.read()
+    route_dim = RouteDimFile().read(area='staging')
     
     return (
         df
@@ -87,16 +82,16 @@ def project_route_sk(df):
 
 def project_visitor_sk(df):
     
-    visitor_dim = VisitorDimFile.read()
+    visitor_dim = VisitorDimFile().read(area='staging')
     
     return (
         df
         .join(
-            visitor_dim.select('visitor_id', *(VisitorDimFile.get_nk())),
-            VisitorDimFile.on_nk(df, visitor_dim),
+            visitor_dim.select('visitor_id', *(VisitorDimFile().get_nk())),
+            VisitorDimFile().on_nk(df, visitor_dim),
             'inner'
         )
-        .drop(*(VisitorDimFile.get_nk()))
+        .drop(*(VisitorDimFile().get_nk()))
     )
 
 def project_schema(df):
@@ -106,7 +101,7 @@ def project_schema(df):
     return df.select(*column_order)
 
 def save_flight_fact(df):
-    FlightFactFile.save(df)
+    FlightFactFile().save(df, area=FlightFactFile.staging)
 
 def etl_flight_fact(date):
     """

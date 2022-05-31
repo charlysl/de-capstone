@@ -4,6 +4,8 @@ import importlib
 
 import pyspark.sql.functions as F
 
+from datalake.model.file_base import FileBase
+
 
 class ETLValidation():
 
@@ -77,7 +79,7 @@ class ETLValidationDispatch():
 
     def _create_views(self, tables, areas, columns):
         return [(
-            self._instantiate_file(tables[i])
+            FileBase.instantiate_file(tables[i])
             .read(**self._areas_to_kwargs(areas, i))
             .select(*columns)
         ) for i in range(len(tables))]
@@ -93,26 +95,6 @@ class ETLValidationDispatch():
             return [kwarg]
         else:
             return kwarg
-
-    def _instantiate_file(self, table):
-        """
-        Description: instantiate given file class
-
-        Parameters: a string of file's module and class anem
-
-        Returns: an instance of the file class
-
-        Example:
-        table = 'datalake.datamodel.files.states_file.StatesFile'
-        module_name: 'datalake.datamodel.files.states_file'
-        class_name: 'StatesFile'
-        """
-        module_name = '.'.join(table.split('.')[:-1])
-        class_name = table.split('.')[-1]
-        module = importlib.import_module(module_name)
-        file_class = getattr(module, class_name)
-        file = file_class()
-        return file
 
     def _areas_to_kwargs(self, areas, i):
         return {'area': areas[i]} if areas else {}

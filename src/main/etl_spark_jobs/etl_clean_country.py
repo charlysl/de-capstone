@@ -16,7 +16,7 @@ def explode_countries(df):
             F.explode('I94CIT')
         )
         .select(
-            F.element_at(F.col('col'), 1).alias('country_id'),
+            F.element_at(F.col('col'), 1).cast('int').alias('country_id'),
             F.element_at(F.col('col'), 2).alias('country')
         )
     )

@@ -22,8 +22,6 @@ April's SAS files has 6 extra columns which aren't needed
 
 
 def load_sas_file(date):
-    import sys
-    print('[*] SYS PATH [*]', sys.path)
     return SasFile(date).read()
 
 @F.udf(T.IntegerType())
@@ -65,7 +63,7 @@ def project_schema(df):
 )
 
 def save_immigration(df):
-    ImmigrationFile.save(df)
+    ImmigrationFile().save(df)
 
 def clean_immigration(date):
     return (

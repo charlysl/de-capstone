@@ -154,6 +154,7 @@ def fill_missing_routes(date):
         .pipe(fill_demographics)
         .pipe(fill_state)
         .pipe(fill_temperature)
+        .pipe(save_route_dim)
     )
 
 fill_missing_routes(spark_helper.get_date())
