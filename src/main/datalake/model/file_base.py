@@ -56,12 +56,8 @@ class FileBase():
         """
         self.name = name
         self.schema = schema
-        self.datalake_root = (
-            datalake_root if datalake_root else FileBase.get_datalake_root()
-        )
-        self.staging_root = (
-            staging_root if staging_root else FileBase.get_staging_root()
-        )
+        self.datalake_root = datalake_root
+        self.staging_root = staging_root
         self.area = area
         self.writable = writable
         self.mode = mode
@@ -107,16 +103,32 @@ class FileBase():
         """
         self.save(self._create_empty_dataframe(), mode='ignore')
 
+    def get_checks(self):
+        """
+        Description: get validation checks to be performed on this dataset.
+
+        Returns: a list of dictionaries that describes one check.
+        ```
+            list({
+                    'check': str,
+                    'dataset': str | list [str],
+                    'column': str | list[str],
+                    'area': str
+            })
+        ```
+        """
+        return []
+
     def _path(self, area=None):
         area = area if area else self.area
 
         if area == 'staging':
             return self._staging_path()
         else:
-            return f"{self.datalake_root}/{area}/{self.name}"
+            return f"{self._get_datalake_root}/{area}/{self.name}"
 
     def _staging_path(self):
-        return f"{self.staging_root}/{self.name}"
+        return f"{self._get_staging_root}/{self.name}"
 
     def _set_partitioning(self, df_writer):
         partitions = self.partitions
@@ -131,10 +143,17 @@ class FileBase():
     def _create_empty_dataframe(self):
         return spark_helper.get_spark().createDataFrame([], self.schema)
 
+    def _get_datalake_root(self):
+        return self.datalake_root if self.datalake_root else FileBase.get_datalake_root()
+
+    def _get_staging_root(self):
+        return self.staging_root if self.staging_root else FileBase.get_staging_root()
+
+
     @staticmethod
     def instantiate_file(file_module_class):
         """
-        Description: instantiate given file class
+        Description: get data set class that corresponds to given name
 
         Parameters: a string of file's module and class anem
 
@@ -144,6 +163,8 @@ class FileBase():
         file_module_class = 'datalake.datamodel.files.states_file.StatesFile'
         module_name: 'datalake.datamodel.files.states_file'
         class_name: 'StatesFile'
+
+        TODO: rename to ```get_class```
         """
         module_name = '.'.join(file_module_class.split('.')[:-1])
         class_name = file_module_class.split('.')[-1]

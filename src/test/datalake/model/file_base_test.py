@@ -7,8 +7,6 @@ import os
 
 class FileBaseTests(ETLTestBase):
 
-    # test save
-
     def test_datalake_root(self):
         self.assertEqual(
             os.environ['DATALAKE_ROOT'],
@@ -22,9 +20,26 @@ class FileBaseTests(ETLTestBase):
         )
         self.assertEqual(
             FileBase.get_datalake_root(),
-            file.datalake_root
+            file._get_datalake_root()
         )
 
+    def test_staging_root(self):
+        self.assertEqual(
+            os.environ['STAGING_ROOT'],
+            FileBase.get_staging_root()
+        )
+
+        file = FileBase(
+            'test_staging_root_file',
+            None,
+            FileBase.staging
+        )
+        self.assertEqual(
+            FileBase.get_staging_root(),
+            file._get_staging_root()
+        )
+
+    # test save
 
     def test_read_defaults(self):
         (file, data, df) = test_utils.create_file(
