@@ -115,5 +115,27 @@ class FileBaseTests(ETLTestBase):
         file.save(df)
         # exception if fails
 
-    def test_hdfs_save(self):
-        pass
+    def test_datalake_save_and_read(self):
+        name = 'test_datalake_save_and_read'
+        (file, data, df) = test_utils.create_file(
+            name, FileBase.curated, writable=True
+        )
+
+        file.save(df)
+
+        actual_df = file.read()
+
+        self._assert_read_equals_saved(actual_df, data)
+
+    # helpers
+
+    def _assert_read_equals_saved(self, actual_df, data):
+        expected = data[0]
+        actual = actual_df.collect()[0].asDict()
+        arity = len(expected)
+        for i in range(arity):
+            self.assertEqual(expected[i], actual[f'col{i}'])
+
+if __name__ == '__main__':
+	import unittest
+	unittest.main()

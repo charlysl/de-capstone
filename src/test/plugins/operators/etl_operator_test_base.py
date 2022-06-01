@@ -113,8 +113,9 @@ class ETLOperatorTestBase(unittest.TestCase):
 
     @staticmethod
     def get_datalake_root():
-        return '/tmp/datalake'
+        #return '/tmp/datalake'
+        return 's3a://de-capstone-2022/datalake_test'
 
     @staticmethod
     def get_staging_root():
-        return 'hdfs://localhost:9000/staging'
+        return 'hdfs://localhost:9000/staging_test'

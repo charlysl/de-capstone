@@ -4,8 +4,7 @@ import pyspark.sql.functions as F
 from datetime import datetime
 import sys
 
-import sys
-from datetime import datetime
+from datalake.utils.aws_helper import AwsHelper
 
 
 spark = [None]
@@ -21,16 +20,30 @@ def get_spark():
     appName will be ignored if executed inside a cluster (submit),
     but will be honoured when executed in a shell (findspark)
     TODO: config parameter
+
+    S3
+
+    To prevent exceptions, must set the right hadoop version, at the end of
+    ```
+    .config("spark.jars.packages","org.apache.hadoop:hadoop-aws:3.2.0")
+    ```
+
+    This must be the same as the one for 
+    ```
+    $SPARK_HOME/jars/hadoop-common-3.2.0.jar
+    ```    
     """
     if not spark[0]:
-        spark[0] = (
+        builder = (
             SparkSession.builder.appName('de-capstone')
-            .config('spark.jars.repositories', 'https://repos.spark-packages.org/')
-            .config('spark.jars.packages', 'saurfang:spark-sas7bdat:3.0.0-s_2.12')
             .config('spark.sql.shuffle.partitions', 5)
             .config('spark.executor.memory', '1g')
-            .getOrCreate()
         )
+
+        spark_config(builder)
+
+        spark[0] = builder.getOrCreate()
+        
     return spark[0]
 
 
@@ -73,4 +86,32 @@ def filter_one_month(df, date):
 
 def get_date():
     return sys.argv[1]
+
+def spark_config(builder=None):
+    """
+    Description: Spark configuration.
+
+    Parameters: a spark builder.
+
+    Returns:
+    - If builder is given: None, but the builder is configured.
+    - Otherwise: a dict with spark configuration.
+    """
+    spark_packages = [
+        'saurfang:spark-sas7bdat:3.0.0-s_2.12',
+        'org.apache.hadoop:hadoop-aws:3.2.0'
+    ]
+
+    config = {
+        'spark.jars.repositories': 'https://repos.spark-packages.org/',
+        'spark.jars.packages': ','.join(spark_packages),
+        'spark.hadoop.fs.s3a.access.key': AwsHelper.access_key(),
+        'spark.hadoop.fs.s3a.secret.key': AwsHelper.secret_key()
+    }
+
+    if builder:
+        for key in config:
+            builder.config(key, config[key])
+    else:
+        return config
 

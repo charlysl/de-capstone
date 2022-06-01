@@ -1,6 +1,10 @@
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.models.variable import Variable
 
+from configparser import ConfigParser
+import os
+
+
 class ETLSparkOperator(SparkSubmitOperator):
     """
     Prereqs:
@@ -28,10 +32,12 @@ class ETLSparkOperator(SparkSubmitOperator):
         kwargs['task_id']=f"{kwargs['name']}_task"
         kwargs['conn_id']='spark'
         kwargs['verbose']=True
+ 
         kwargs['conf']={
             'spark.sql.shuffle.partitions': 12,
-            'spark.executor.memory': '1g'
+            'spark.executor.memory': '1g',
         }
+        kwargs['conf'].update(ETLSparkOperator._spark_config())
 
         if 'application' in  kwargs:
             application = kwargs['application']
@@ -70,7 +76,7 @@ class ETLSparkOperator(SparkSubmitOperator):
     def _add_application_args(kw_args):
         """
         From: https://airflow.apache.org/docs/apache-airflow/1.10.12/_api/airflow/contrib/operators/spark_submit_operator/index.h
-        application_args (list) – Arguments for the application being submitted (**templated**)
+        application_args (list) - Arguments for the application being submitted (**templated**)
         """
         date = "{{ds}}"
         if 'application_args' in kw_args:
@@ -78,3 +84,22 @@ class ETLSparkOperator(SparkSubmitOperator):
         else:
             kw_args['application_args'] = [date]
 
+    @staticmethod
+    def _spark_config():
+        spark_packages = [
+            'saurfang:spark-sas7bdat:3.0.0-s_2.12',
+            'org.apache.hadoop:hadoop-aws:3.2.0'
+        ]
+
+        config = ConfigParser()
+        aws_credentials = f'{os.environ["HOME"]}/.aws/credentials'
+        config.read(aws_credentials)
+
+        config = {
+            'spark.jars.repositories': 'https://repos.spark-packages.org/',
+            'spark.jars.packages': ','.join(spark_packages),
+            'spark.hadoop.fs.s3a.access.key': config['default'].get('aws_access_key_id'),
+            'spark.hadoop.fs.s3a.secret.key': config['default'].get('aws_secret_access_key')
+        }
+
+        return config

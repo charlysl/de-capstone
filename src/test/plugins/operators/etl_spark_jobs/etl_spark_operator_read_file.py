@@ -5,24 +5,24 @@ from datalake.utils import spark_helper
 import pyspark.sql.types as T
 schema = T.StructType([T.StructField('col', T.StringType(), True)])
 
+def save_dummy_file(area):
+    file = create_dummy_file()
+    df = create_dummy_dataframe()
+    file.save(df, area=area, force=True)
+
+def read_dummy_file(area):
+    file = create_dummy_file()
+    file.read(area=area)
+
 def create_dummy_file():
     class DummyFile(FileBase):
         def __init__(self):
             super().__init__(
-                'dummy',
+                'test_etl_spark_operator_read_file',
                 schema,
-                self.staging
+                area=FileBase.staging
             )
     return DummyFile()
-
-def save_dummy_file():
-    file = create_dummy_file()
-    df = create_dummy_dataframe()
-    file.save(df, force=True)
-
-def read_dummy_file():
-    file = create_dummy_file()
-    file.read()
 
 def create_dummy_dataframe():
     return (
@@ -33,8 +33,6 @@ def create_dummy_dataframe():
         )
     )
 
-save_dummy_file()
-read_dummy_file()
-
-create_dummy_file()
-read_dummy_file()
+for area in ['staging', 'production']:
+    save_dummy_file(area=area)
+    read_dummy_file(area=area)

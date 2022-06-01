@@ -36,8 +36,8 @@ with dag:
     stop_spark_task = stop_spark()
     clean_immigration_task = ETLSparkOperator(
         name='clean_immigration',
-        packages='saurfang:spark-sas7bdat:3.0.0-s_2.12',
-        repositories='https://repos.spark-packages.org/'
+        #packages='saurfang:spark-sas7bdat:3.0.0-s_2.12',
+        #repositories='https://repos.spark-packages.org/'
     )
     with TaskGroup(
             group_id='transform_facts_and_dims'

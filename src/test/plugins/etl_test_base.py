@@ -7,7 +7,8 @@ import shutil
 
 import os
 
-os.environ['DATALAKE_ROOT'] = '/tmp/datalake'
+#os.environ['DATALAKE_ROOT'] = '/tmp/datalake'
+os.environ['DATALAKE_ROOT'] = 's3a://de-capstone-2022/datalake_test'
 
 #Hadoop must be running locally if staging in HDFS.
 #see: https://towardsdatascience.com/installing-hadoop-on-a-mac-ec01c67b003c
