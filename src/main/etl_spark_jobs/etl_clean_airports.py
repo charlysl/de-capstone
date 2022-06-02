@@ -7,6 +7,7 @@ import sys
 
 from datalake.datamodel.files.raw_airports_file import RawAirportsFile
 from datalake.datamodel.files.airports_file import AirportsFile
+from datalake.datamodel.files.states_file import StatesFile
 
 from datalake.utils import spark_helper
 
@@ -30,6 +31,32 @@ def filter_us_iso_countries(df):
             how='inner'
         )
         .drop('iso_country2')
+    )
+
+
+def drop_null_iata(df):
+    """
+    Assume that only international airports will have an IATA code, given
+    that IATA stands for "International Air Transport Association".
+    """
+    return df.where(F.expr('iata_code IS NOT NULL'))
+
+def drop_closed(df):
+    return df.where(F.col('type') != 'closed')
+
+def drop_unknown_states(df):
+    """
+    After dropping null iatas and closed airports, there are still unknown state ids:
+    - MH (Marshall Islands, an independent country, but somehow passed the US-state filter),
+    - FM (Micronesia)
+    - PW (Palau)
+    These are all independent countries, so drop them
+    """
+    
+    states = StatesFile().read(area='staging').select('state_id')
+    
+    return (
+        df.join(states, on='state_id', how='inner')
     )
 
 def project_state(df):
@@ -63,6 +90,7 @@ def project_international(df):
         'international',
         F.expr("LOWER(name) LIKE '%international%'")
     )
+  
 
 def project_schema(df):
     return (
@@ -81,13 +109,16 @@ def project_schema(df):
     )
 
 def save_clean_airports(df):    
-    AirportsFile().save(df)
-
+    AirportsFile().stage(df)
+    
 def clean_airports():
     return (
         load_airports()
         .pipe(filter_us_iso_countries)
+        .pipe(drop_null_iata)
+        .pipe(drop_closed)
         .pipe(project_state)
+        .pipe(drop_unknown_states)
         .pipe(project_type_id)
         .pipe(project_international)
         .pipe(project_schema)
