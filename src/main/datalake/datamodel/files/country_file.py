@@ -14,3 +14,11 @@ class CountryFile(ReferenceFileBase):
             schema,
             self.curated
         )
+
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, column='country_id')
+        self.add_check(self.Check.no_nulls, column='country')
+        self.add_check(self.Check.no_duplicates, column='country_id')
+        #self.add_check(self.Check.no_duplicates, column='country')
+        self.add_check(self.Check.no_duplicates, column=['country_id', 'country'])
+        

@@ -142,7 +142,7 @@ def project_schema(df):
     )
 
 def save_temperatures(df):
-    TemperaturesFile().save(df)
+    TemperaturesFile().stage(df)
 
 def clean_temperatures():
     return (

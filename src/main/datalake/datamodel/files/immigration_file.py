@@ -32,3 +32,19 @@ class ImmigrationFile(FileBase):
             partitions=['year', 'month_id'],
             writable=True
         )
+
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, column='year')
+        self.add_check(self.Check.no_nulls, column='month_id')
+        self.add_check(self.Check.no_nulls, column='day')
+        self.add_check(self.Check.no_nulls, column='arrival_date')
+        self.add_check(self.Check.no_nulls, column='airline')
+        self.add_check(self.Check.no_nulls, column='flight_number')
+        self.add_check(self.Check.no_nulls, column='port_id')
+        self.add_check(self.Check.no_nulls, column='citizenship_id')
+        self.add_check(self.Check.no_nulls, column='residence_id')
+        self.add_check(self.Check.no_nulls, column='count')
+        self.add_check(self.Check.referential_integrity, table=['ports'], column='port_id')
+        self.add_check(self.Check.referential_integrity, table=['country'], column='citizenship_id')
+        self.add_check(self.Check.referential_integrity, table=['country'], column='residence_id')
+        self.add_check(self.Check.referential_integrity, table=['states'], column='address_id')

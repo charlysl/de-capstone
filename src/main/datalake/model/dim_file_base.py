@@ -13,6 +13,8 @@ class DimFileBase(FileBase):
             mode='overwrite'
         )
 
+        self.add_check(self.Check.no_duplicates, column=self.nk)
+
     # static methods
     def on(df1, df2, cols):
         cond = F.expr('true')

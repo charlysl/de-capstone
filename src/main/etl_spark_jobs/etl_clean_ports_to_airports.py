@@ -160,7 +160,7 @@ def project_schema(df):
     return df.select('port_id', 'airport_id')
 
 def save_ports_to_airports(df):
-    PortsToAirportsFile().save(df)
+    PortsToAirportsFile().stage(df)
 
 def ports_to_airports(df):
     return (

@@ -17,3 +17,12 @@ class PortsFile(ReferenceFileBase):
             writable=True,
             coalesce=1
         )
+
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, column='port_id')
+        self.add_check(self.Check.no_nulls, column='state_id')
+        self.add_check(self.Check.no_nulls, column='name')
+        self.add_check(self.Check.no_duplicates, column='port_id')
+        #self.add_check(self.Check.no_duplicates, column='name')
+        self.add_check(self.Check.referential_integrity, table=['states'], column='state_id')
+

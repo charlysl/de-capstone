@@ -18,9 +18,15 @@ class StatesFile(ReferenceFileBase):
             writable=True
         )
 
-    def get_checks(self):
-        return [{
-            'check': 'check_not_empty',
-            'table': 'datalake.datamodel.files.states_file.StatesFile',
-            'area': 'staging',
-        }]
+        self.add_check(self.Check.not_empty),
+        self.add_check(self.Check.no_nulls, column='state_id'),
+        self.add_check(self.Check.no_nulls, column='name'),
+        self.add_check(self.Check.no_nulls, column='type_id'),
+        self.add_check(self.Check.no_nulls, column='type'),
+        self.add_check(self.Check.no_duplicates, column='state_id')
+        self.add_check(self.Check.no_duplicates, column='name')
+        self.add_check(
+            self.Check.no_duplicates,
+            column=['state_id', 'name', 'type_id', 'type']
+        )
+

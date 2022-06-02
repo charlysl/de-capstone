@@ -16,3 +16,9 @@ class TemperaturesFile(ReferenceFileBase):
             self.curated,
             writable=True
         )
+
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, column='state_id')
+        self.add_check(self.Check.no_nulls, column='climate_id')
+        self.add_check(self.Check.no_nulls, column='climate')
+        self.add_check(self.Check.no_duplicates, column='state_id')

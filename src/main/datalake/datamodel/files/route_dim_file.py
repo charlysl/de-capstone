@@ -44,5 +44,10 @@ class RouteDimFile(DimFileBase):
             "route_dim",
             schema,
         )
+    
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, 'route_id')
+        self.add_check(self.Check.no_duplicates, 'route_id')
+
 
     nk = ['airline', 'flight_number', 'port_id']

@@ -63,7 +63,7 @@ def project_schema(df):
 )
 
 def save_immigration(df):
-    ImmigrationFile().save(df)
+    ImmigrationFile().stage(df)
 
 def clean_immigration(date):
     return (

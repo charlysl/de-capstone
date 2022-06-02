@@ -37,7 +37,7 @@ def clean_mexico(df):
     )
 
 def save_clean_country(df):
-    CountryFile().save(df)
+    CountryFile().stage(df)
 
 def clean_country():
     return (

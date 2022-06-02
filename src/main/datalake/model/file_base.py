@@ -2,6 +2,8 @@ import datalake.utils.pipe
 from datalake.utils import spark_helper
 
 import os
+import re
+import copy
 import importlib
 import logging
 
@@ -26,6 +28,12 @@ class FileBase():
     class FileNotWritableException(Exception):
         def __init__(self, file):
             super().__init__(f"File {file._path()} is not writable")
+
+    class Check:
+        not_empty = 'check_not_empty'
+        no_nulls = 'check_no_nulls'
+        no_duplicates = 'check_no_duplicates'
+        referential_integrity = 'check_referential_integrity'
 
     eda = 'eda'
     raw = 'raw'
@@ -65,6 +73,13 @@ class FileBase():
         self.coalesce = coalesce
         self.options = options
         self.partitions = partitions
+
+        # init checks
+        self.checks = []
+        self.base_check = {
+            'table': [self.__class__.__name__],
+        }
+
     
     def read(self, area=None):
 
@@ -135,7 +150,18 @@ class FileBase():
             })
         ```
         """
-        return []
+        return self.checks
+
+    def add_check(self, check, column=None, table=None):
+        new_check = copy.deepcopy(self.base_check)
+        new_check['check'] = check
+        if column:
+            new_check['column'] = column
+        if table:
+            tables = [table] if type(table) == str else table
+            # table routeDim would become RouteDimFile:
+            new_check['table'].extend([f'{t[0].upper()}{t[1:]}File' for t in tables])
+        self.get_checks().append(new_check)
 
     def _path(self, area=None):
         area = area if area else self.area
@@ -175,7 +201,7 @@ class FileBase():
 
         Parameters: a string of file's module and class anem
 
-        Returns: an instance of the file class
+        Returns: the file's class
 
         Example:
         file_module_class = 'datalake.datamodel.files.states_file.StatesFile'
@@ -184,10 +210,41 @@ class FileBase():
 
         TODO: rename to ```get_class```
         """
+        file_class = FileBase.get_class_from_full_name(file_module_class)
+        return file_class()
+
+    @staticmethod
+    def get_class_from_full_name(file_module_class):
         module_name = '.'.join(file_module_class.split('.')[:-1])
         class_name = file_module_class.split('.')[-1]
         module = importlib.import_module(module_name)
         file_class = getattr(module, class_name)
-        file = file_class()
-        return file
+        return file_class
 
+    @staticmethod
+    def get_class_from_class_name(file_class_name):
+        file_module = 'datalake.datamodel.files'
+        pfn = FileBase._get_python_file_name(file_class_name)
+        file_module_class = f'{file_module}.{pfn}.{file_class_name}'
+        print('file_module_class', file_module_class)
+        file_class = FileBase.get_class_from_full_name(file_module_class)
+        return file_class
+
+    @staticmethod
+    def _get_python_file_name(file_class):
+        """
+        Produce the name of the python file that contains given file class
+
+        Example:
+        Given 'TimeDimFile', produce 'time_dim_file'
+        """
+        # assume file_class in camel case
+        # i.e. TimeDimFile
+        tokens = re.split('([A-Z][^A-Z]+)', file_class)
+
+        # remove empty tokens
+        words = filter(lambda s: len(s) > 0, tokens)
+
+        # join words
+        # i.e. time_dim_file
+        return '_'.join(words).lower()

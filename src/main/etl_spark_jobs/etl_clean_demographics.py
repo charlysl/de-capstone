@@ -193,7 +193,7 @@ def clean_demographics():
     )
 
 def save_demographics(df):
-    DemographicsFile().save(df)
+    DemographicsFile().stage(df)
 
 
 clean_demographics()

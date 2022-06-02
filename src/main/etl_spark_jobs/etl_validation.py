@@ -64,7 +64,6 @@ class ETLValidationDispatch():
 
         dfs = self._create_views(
             self._to_array(kwargs.get('table')),
-            self._to_array(kwargs.get('area')),
             self._to_array(kwargs.get('column'))
         )
 
@@ -76,10 +75,10 @@ class ETLValidationDispatch():
         # see https://stackoverflow.com/questions/3521715/call-a-python-method-by-nam
         getattr(ETLValidation(dfs[0]), check)(*dfs[1:])
 
-    def _create_views(self, tables, areas, columns):
+    def _create_views(self, tables, columns):
         return [(
-            FileBase.instantiate_file(tables[i])
-            .read(**self._areas_to_kwargs(areas, i))
+            FileBase.get_class_from_class_name(tables[i])()
+            .read(area=FileBase.staging)
             .select(*columns)
         ) for i in range(len(tables))]
 
@@ -94,9 +93,6 @@ class ETLValidationDispatch():
             return [kwarg]
         else:
             return kwarg
-
-    def _areas_to_kwargs(self, areas, i):
-        return {'area': areas[i]} if areas else {}
 
 if __name__ == '__main__':
     ETLValidationDispatch(sys.argv).dispatch()

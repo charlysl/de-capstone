@@ -59,7 +59,7 @@ def create_task_group(transformation, output, dag=None, **kwargs):
 
 def _create_validation_tasks(output):
     tasks = [
-        ETLCheckBaseOperator(name=check['check'], **check)
+        ETLCheckBaseOperator(name=_get_task_name(check), **check)
         for check in output().get_checks()
     ]
     return tasks
@@ -74,3 +74,13 @@ def _compose_tasks(transformation_task, validation_tasks, load_task):
             validation_task >> load_task
     else:
         transformation_task >> load_task
+
+def _get_task_name(check):
+    pfx = f"{check['table'][0]}_{check['check']}"
+    if 'column' in check:
+        if type(check['column']) == list:
+            return f"{pfx}_{'_'.join(check['column'])}"
+        else:
+            return f"{pfx}_{check['column']}"
+    else:
+        return pfx

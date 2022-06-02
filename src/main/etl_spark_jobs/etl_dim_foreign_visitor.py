@@ -151,7 +151,7 @@ def project_schema(df):
     )
 
 def save_visitor_dim(df):
-    VisitorDimFile().save(df, area=VisitorDimFile.staging)
+    VisitorDimFile().stage(df)
 
 def fill_missing_visitor(date):
     

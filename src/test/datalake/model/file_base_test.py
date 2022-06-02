@@ -2,6 +2,9 @@ from etl_test_base import ETLTestBase
 from datalake.model.file_base import FileBase
 from datalake.utils import test_utils
 
+from datalake.datamodel.files.test_file import TestFile
+
+
 import os
 
 
@@ -141,6 +144,10 @@ class FileBaseTests(ETLTestBase):
         actual_df = file.read()
 
         self._assert_read_equals_saved(actual_df, data)
+
+    def test_get_class_from_class_name(self):
+        actual = FileBase.get_class_from_class_name('TestFile')
+        self.assertEqual(TestFile, actual)
 
     # helpers
 

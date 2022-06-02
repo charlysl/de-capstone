@@ -9,15 +9,21 @@ from etl_airflow_tasks import create_preprocess_i94_data_dictionary_task
 from operators.etl_spark_operator import ETLSparkOperator
 import stage_check_exchange_task_group as sce
 
+from datalake.datamodel.files.airports_file import AirportsFile
+from datalake.datamodel.files.country_file import CountryFile
+from datalake.datamodel.files.demographics_file import DemographicsFile
+from datalake.datamodel.files.ports_file import PortsFile
+from datalake.datamodel.files.ports_to_airports_file import PortsToAirportsFile
 from datalake.datamodel.files.states_file import StatesFile
-
+from datalake.datamodel.files.temperatures_file import TemperaturesFile
 
 dag = DAG(
   'de-capstone-etl-initial',
   schedule_interval='@once',
   start_date=datetime(2015,1,1), # ensure starts before incremental dag
   # see https://stackoverflow.com/questions/56370720/how-to-control-the-parallelism-or-concurrency-of-an-airflow-installation
-  max_active_runs=1
+  max_active_runs=1,
+  concurrency=12 # cores in my laptop, should prevent timeouts
 )
 
 
@@ -34,7 +40,6 @@ with dag:
         init_flight_fact_task = ETLSparkOperator(name='init_flight_fact')
 
     with TaskGroup(group_id='reference_tables_preprocessing', prefix_group_id=False) as reference_tables_preprocessing_group:
-        #clean_states_task = ETLSparkOperator(dag=dag, name='clean_states')
         clean_states_task = sce.create_task_group('clean_states', StatesFile)
 
         process_i94_data_dictionary_task = (
@@ -42,12 +47,12 @@ with dag:
         )
 
     with TaskGroup(group_id='create_reference_tables', prefix_group_id=False) as create_reference_tables_group:
-        clean_airport_task = ETLSparkOperator(name='clean_airports')
-        clean_demographics_task = ETLSparkOperator(name='clean_demographics')
-        clean_temperature_task = ETLSparkOperator(name='clean_temperatures')
-        clean_ports_task = ETLSparkOperator(name='clean_ports')
-        clean_country_task = ETLSparkOperator(name='clean_country')
-        clean_port_to_airport = ETLSparkOperator(name='clean_ports_to_airports')
+        clean_airport_task = sce.create_task_group('clean_airports', AirportsFile)
+        clean_demographics_task = sce.create_task_group('clean_demographics', DemographicsFile)
+        clean_temperature_task = sce.create_task_group('clean_temperatures', TemperaturesFile)
+        clean_ports_task = sce.create_task_group('clean_ports', PortsFile)
+        clean_country_task = sce.create_task_group('clean_country', CountryFile)
+        clean_port_to_airport = sce.create_task_group('clean_ports_to_airports', PortsToAirportsFile)
 
         clean_airport_task >> clean_port_to_airport
         clean_ports_task >> clean_port_to_airport

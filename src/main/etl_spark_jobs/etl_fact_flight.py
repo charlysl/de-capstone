@@ -101,7 +101,7 @@ def project_schema(df):
     return df.select(*column_order)
 
 def save_flight_fact(df):
-    FlightFactFile().save(df, area=FlightFactFile.staging)
+    FlightFactFile().stage(df)
 
 def etl_flight_fact(date):
     """

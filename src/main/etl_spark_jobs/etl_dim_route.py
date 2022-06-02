@@ -141,7 +141,7 @@ def fill_temperature(df):
     )
 
 def save_route_dim(df):
-    RouteDimFile().save(df, area=RouteDimFile.staging)
+    RouteDimFile().stage(df)
 
 def fill_missing_routes(date):
     return (

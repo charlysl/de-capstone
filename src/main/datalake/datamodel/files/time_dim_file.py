@@ -23,4 +23,11 @@ class TimeDimFile(DimFileBase):
             schema
         )
 
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, 'time_id')
+        self.add_check(self.Check.no_duplicates, 'time_id')
+        self.add_check(self.Check.no_nulls, 'date')
+        #self.add_check(self.Check.no_duplicates, 'date') #TODO: mistery exception
+
+
     nk = ['date']

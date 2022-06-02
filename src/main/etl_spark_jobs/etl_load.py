@@ -9,35 +9,9 @@ Load dataset given by argv[1] from staging.
 """
 
 def load():
-    file = get_file(sys.argv[1])
+    file_class = FileBase.get_class_from_class_name(sys.argv[1])
+    file = file_class()
     df = file.read(area=FileBase.staging)
     file.save(df)
-
-def get_file(file_class_name):
-    file_module = 'datalake.datamodel.files'
-    pfn = get_python_file_name(file_class_name)
-    file_module_class = f'{file_module}.{pfn}.{file_class_name}'
-    print('file_module_class', file_module_class)
-    file = FileBase.instantiate_file(file_module_class)
-    return file
-
-
-def get_python_file_name(file_class):
-    """
-    Produce the name of the python file that contains given file class
-
-    Example:
-    Given 'TimeDimFile', produce 'time_dim_file'
-    """
-    # assume file_class in camel case
-    # i.e. TimeDimFile
-    tokens = re.split('([A-Z][^A-Z]+)', file_class)
-
-    # remove empty tokens
-    words = filter(lambda s: len(s) > 0, tokens)
-
-    # join words
-    # i.e. time_dim_file
-    return '_'.join(words).lower()
 
 load()

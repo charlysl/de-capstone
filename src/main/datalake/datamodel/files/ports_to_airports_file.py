@@ -16,3 +16,12 @@ class PortsToAirportsFile(ReferenceFileBase):
             coalesce=1,
             writable=True
         )
+
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, column='port_id')
+        self.add_check(self.Check.no_nulls, column='airport_id')
+        self.add_check(self.Check.no_duplicates, column='port_id')
+        #self.add_check(self.Check.no_duplicates, column='airport_id')
+        self.add_check(self.Check.no_duplicates, column=['port_id', 'airport_id'])
+        self.add_check(self.Check.referential_integrity, table='ports', column='port_id')
+        self.add_check(self.Check.referential_integrity, table='airports', column='airport_id')

@@ -7,13 +7,15 @@ from airflow.operators.dummy import DummyOperator
 from datetime import datetime
 
 from etl_spark_standalone import start_spark, stop_spark
-from etl_airflow_tasks import create_preprocess_i94_data_dictionary_task
+import stage_check_exchange_task_group as sce
 
 from operators.etl_spark_operator import ETLSparkOperator
-#from operators.check_not_empty_operator import CheckNotEmptyOperator
-#from operators.check_no_nulls_operator import CheckNoNullsOperator
-#from operators.check_no_duplicates_operator import CheckNoDuplicatesOperator
-#from operators.check_referential_integrity_operator import CheckReferentialIntegrityOperator
+
+from datalake.datamodel.files.time_dim_file import TimeDimFile
+from datalake.datamodel.files.route_dim_file import RouteDimFile
+from datalake.datamodel.files.visitor_dim_file import VisitorDimFile
+from datalake.datamodel.files.flight_fact_file import FlightFactFile
+
 
 dag = DAG(
   'de-capstone-etl-incremental',
@@ -40,67 +42,15 @@ with dag:
     with TaskGroup(
             group_id='transform_facts_and_dims'
         ) as transform_facts_and_dims_group:
-        dim_time_task = ETLSparkOperator(name='dim_time')
-        dim_route_task = ETLSparkOperator(name='dim_route')
-        dim_foreign_visitor_task = ETLSparkOperator(name='dim_foreign_visitor')
-        fact_flight_task = ETLSparkOperator(name='fact_flight')
+        dim_time_task = sce.create_task_group('dim_time', TimeDimFile)
+        dim_route_task = sce.create_task_group('dim_route', RouteDimFile)
+        dim_foreign_visitor_task = sce.create_task_group('dim_foreign_visitor', VisitorDimFile)
+        fact_flight_task = sce.create_task_group('fact_flight', FlightFactFile)
 
         dim_time_task >> fact_flight_task
         dim_route_task >> fact_flight_task
         dim_foreign_visitor_task >> fact_flight_task
     
-
-
-    """
-    with TaskGroup('flight_fact_validation', dag=dag) as flight_fact_validation:
-        check_not_empty_flight_fact = CheckNotEmptyOperator(
-            name='check_not_empty_flight_fact',
-            table='flight_fact',
-            kind='fact',
-            dag=dag
-        )
-
-        check_no_nulls_flight_fact = CheckNoNullsOperator(
-            name='check_no_nulls_flight_fact',
-            table='flight_fact',
-            kind='fact',
-            column=['time_id', 'route_id', 'visitor_id', 'num_visitors'],
-            dag=dag
-        )
-
-        check_no_duplicates_flight_fact_pk = CheckNoDuplicatesOperator(
-            name='check_no_duplicates_flight_fact_pk',
-            table='flight_fact',
-            kind='fact',
-            column=['time_id', 'route_id', 'visitor_id'],
-            dag=dag
-        )
-
-        check_total_participation_flight_fact_time_dim= CheckReferentialIntegrityOperator(
-            name='check_total_participation_flight_fact_time_dim',
-            table=['flight_fact', 'time_dim'],
-            kind=['fact', 'dim'],
-            column='time_id',
-            dag=dag
-        )
-
-        check_total_participation_flight_fact_route_dim = CheckReferentialIntegrityOperator(
-            name='check_total_participation_flight_fact_route_dim',
-            table=['flight_fact', 'route_dim'],
-            kind=['fact', 'dim'],
-            column='route_id',
-            dag=dag
-        )
-
-        check_total_participation_flight_fact_visitor_dim = CheckReferentialIntegrityOperator(
-            name='check_total_participation_flight_fact_visitor_dim',
-            table=['flight_fact', 'foreign_visitor_dim'],
-            kind=['fact', 'dim'],
-            column='visitor_id',
-            dag=dag
-        )
-    """
-
 
 start_pipeline_task >> start_spark_task
 start_spark_task >> clean_immigration_task 

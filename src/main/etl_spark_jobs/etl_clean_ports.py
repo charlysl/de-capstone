@@ -214,7 +214,7 @@ def remove_ports_with_non_standard_states(df):
     )
 
 def save_clean_ports(df):
-    PortsFile().save(df)
+    PortsFile().stage(df)
 
 def clean_ports():
     return (

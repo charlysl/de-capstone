@@ -26,3 +26,11 @@ class DemographicsFile(ReferenceFileBase):
             self.curated,
             writable=True
         )
+
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, column='state_id')
+        self.add_check(self.Check.no_nulls, column='city')
+        self.add_check(self.Check.no_nulls, column='ethnicity_id')
+        self.add_check(self.Check.no_nulls, column='size_id')
+        self.add_check(self.Check.no_duplicates, column=['state_id', 'city'])
+        self.add_check(self.Check.referential_integrity, table=['states'], column='state_id')        

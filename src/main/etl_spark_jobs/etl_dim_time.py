@@ -47,7 +47,7 @@ def fill_time_dim(df):
     )
 
 def save_time_dim(df):
-    TimeDimFile().save(df, area='staging')
+    TimeDimFile().stage(df)
 
 def upsert_time_dim(date):
     return (

@@ -22,3 +22,22 @@ class AirportsFile(ReferenceFileBase):
             self.curated,
             writable=True
         )
+
+        # add validation checks
+        self.add_check(self.Check.not_empty),
+        self.add_check(self.Check.no_nulls, column='airport_id'),
+        self.add_check(self.Check.no_nulls, column='airport_iata'),
+        self.add_check(self.Check.no_nulls, column='state_id'),
+        self.add_check(self.Check.no_nulls, column='city'),
+        self.add_check(self.Check.no_nulls, column='name'),
+        self.add_check(self.Check.no_nulls, column='international'),
+        self.add_check(self.Check.no_nulls, column='type_id'),
+        self.add_check(self.Check.no_nulls, column='type'),
+        self.add_check(self.Check.no_nulls, column='coordinates'),
+        self.add_check(self.Check.no_duplicates, column='airport_id')
+        self.add_check(self.Check.no_duplicates, column='airport_iata')
+        self.add_check(
+            self.Check.referential_integrity,
+            table=['states'],
+            column='state_id'
+        )

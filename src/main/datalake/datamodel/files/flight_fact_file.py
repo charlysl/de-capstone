@@ -21,3 +21,12 @@ class FlightFactFile(FileBase):
             self.production,
             writable=True
         )
+
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, column='time_id')
+        self.add_check(self.Check.no_nulls, column='route_id')
+        self.add_check(self.Check.no_nulls, column='visitor_id')
+        self.add_check(self.Check.no_duplicates, column=['time_id', 'route_id', 'visitor_id'])
+        self.add_check(self.Check.referential_integrity, table='TimeDim', column='time_id')
+        self.add_check(self.Check.referential_integrity, table='RouteDim', column='route_id')
+        self.add_check(self.Check.referential_integrity, table='VisitorDim', column='visitor_id')                

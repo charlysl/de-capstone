@@ -31,4 +31,8 @@ class VisitorDimFile(DimFileBase):
             schema
         )
 
-    nk = ['citizenship_id', 'residence_id', 'age_id', 'gender_id', 'visa_id', 'address_id', 'stay_id']
+        self.add_check(self.Check.not_empty)
+        self.add_check(self.Check.no_nulls, 'visitor_id')
+        self.add_check(self.Check.no_duplicates, 'visitor_id')
+
+    nk = ['citizenship_id', 'residence_id', 'residence_id', 'age_id', 'gender_id', 'visa_id', 'address_id', 'stay_id']
