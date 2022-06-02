@@ -17,3 +17,10 @@ class StatesFile(ReferenceFileBase):
             self.curated,
             writable=True
         )
+
+    def get_checks(self):
+        return [{
+            'check': 'check_not_empty',
+            'table': 'datalake.datamodel.files.states_file.StatesFile',
+            'area': 'staging',
+        }]

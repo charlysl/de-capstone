@@ -1,8 +1,12 @@
+import findspark
+findspark.init()
+from datalake.utils import spark_helper
+spark_helper.get_spark()
+
 import os
 
 from airflow.models import DAG
 from airflow.models.connection import Connection
-from airflow.hooks.base import BaseHook
 from airflow.utils.state import DagRunState, TaskInstanceState
 from airflow.utils.types import DagRunType
 
@@ -10,6 +14,7 @@ import datetime
 import pendulum
 
 from datalake.model.file_base import FileBase
+from datalake.utils import test_utils
 
 from operators.etl_spark_operator import ETLSparkOperator
 #from etl_test_base import ETLTestBase
@@ -30,6 +35,7 @@ class ETLOperatorTestBase(unittest.TestCase):
     """
 
     def setUp(self):
+        super().setUp()
         self._setup_test_dag()
         self._setup_airflow_spark_connection()
         self._mock_airflow_variables()
@@ -110,6 +116,8 @@ class ETLOperatorTestBase(unittest.TestCase):
     def _mock_airflow_variable(airflow_key, value):
         key = f'AIRFLOW_VAR_{airflow_key}'
         os.environ[key] = value
+        # For the sake of creating test datasets:
+        os.environ[airflow_key] = value
 
     @staticmethod
     def get_datalake_root():

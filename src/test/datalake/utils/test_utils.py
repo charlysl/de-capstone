@@ -1,5 +1,7 @@
 import pyspark.sql.types as T
 
+import os
+
 from datalake.model.file_base import FileBase
 from datalake.utils import spark_helper
 
@@ -52,3 +54,7 @@ def create_schema(arity):
         for i in range(arity)
     ]
     return T.StructType(fields)
+
+def set_s3_hdfs_roots():
+    os.environ['DATALAKE_ROOT'] = 's3a://de-capstone-2022/datalake_test'
+    os.environ['STAGING_ROOT'] = 'hdfs://localhost:9000/staging_test'

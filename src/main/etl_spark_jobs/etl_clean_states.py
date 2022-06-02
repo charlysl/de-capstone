@@ -55,7 +55,7 @@ def project_schema(df):
     return df.select('state_id', 'name', 'type_id', 'type')
 
 def save_clean_states(df):
-    StatesFile().save(df)
+    StatesFile().stage(df)
 
 def clean_states():
     """

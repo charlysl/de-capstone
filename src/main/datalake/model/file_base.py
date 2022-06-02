@@ -3,7 +3,7 @@ from datalake.utils import spark_helper
 
 import os
 import importlib
-
+import logging
 
 class FileBase():
 
@@ -67,6 +67,9 @@ class FileBase():
         self.partitions = partitions
     
     def read(self, area=None):
+
+        logging.info(f'READING {self._path(area)}')
+
         return (
             spark_helper.get_spark().read
             .pipe(self._set_options, self.options)
@@ -82,6 +85,10 @@ class FileBase():
         to write other partitions in parallel.
         - force: ignore self.writable; intended for testing
         """
+        mode = mode if mode else self.mode
+
+        logging.info(f'SAVING(mode={mode}) {self._path(area)}')
+
         if not force and not self.writable:
             raise self.FileNotWritableException(self)
 
@@ -91,9 +98,20 @@ class FileBase():
             .write
             .pipe(self._set_partitioning)
             .format(self.format)
-            .mode(mode if mode else self.mode)
+            .mode(mode)
             .save(self._path(area))
         )
+
+    def stage(self, df):
+        """
+        Description: save in staging area.
+
+        Parameters:
+        - df: DataFrame - the data frame to be saved.
+
+        Effects: overwrite the dataset in the staging area.
+        """
+        self.save(df, area=FileBase.staging, mode='overwrite')
 
     def init(self):
         """
@@ -125,10 +143,10 @@ class FileBase():
         if area == 'staging':
             return self._staging_path()
         else:
-            return f"{self._get_datalake_root}/{area}/{self.name}"
+            return f"{self._get_datalake_root()}/{area}/{self.name}"
 
     def _staging_path(self):
-        return f"{self._get_staging_root}/{self.name}"
+        return f"{self._get_staging_root()}/{self.name}"
 
     def _set_partitioning(self, df_writer):
         partitions = self.partitions

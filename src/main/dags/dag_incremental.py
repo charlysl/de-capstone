@@ -10,8 +10,6 @@ from etl_spark_standalone import start_spark, stop_spark
 from etl_airflow_tasks import create_preprocess_i94_data_dictionary_task
 
 from operators.etl_spark_operator import ETLSparkOperator
-from operators.etl_load_dim_operator import ETLLoadDimOperator
-from operators.etl_load_fact_operator import ETLLoadFactOperator
 #from operators.check_not_empty_operator import CheckNotEmptyOperator
 #from operators.check_no_nulls_operator import CheckNoNullsOperator
 #from operators.check_no_duplicates_operator import CheckNoDuplicatesOperator
@@ -51,22 +49,7 @@ with dag:
         dim_route_task >> fact_flight_task
         dim_foreign_visitor_task >> fact_flight_task
     
-    load_dim_time_task = ETLLoadDimOperator(
-        name='load_dim_time',
-        file='TimeDimFile'
-    )
-    load_dim_route_task = ETLLoadDimOperator(
-        name='load_dim_route',
-        file='RouteDimFile'
-    )
-    load_dim_foreign_visitor_task = ETLLoadDimOperator(
-        name='load_dim_foreign_visitor',
-        file='VisitorDimFile'
-    )
-    load_fact_flight_task = ETLLoadFactOperator(
-        name='load_fact_flight',
-        file='FlightFactFile'
-    )
+
 
     """
     with TaskGroup('flight_fact_validation', dag=dag) as flight_fact_validation:
@@ -124,13 +107,6 @@ start_spark_task >> clean_immigration_task
 clean_immigration_task >> transform_facts_and_dims_group
 #fact_flight >> flight_fact_validation
 
-transform_facts_and_dims_group >> load_dim_time_task
-transform_facts_and_dims_group >> load_dim_route_task
-transform_facts_and_dims_group >> load_dim_foreign_visitor_task
-load_dim_time_task >> load_fact_flight_task
-load_dim_route_task >> load_fact_flight_task
-load_dim_foreign_visitor_task  >> load_fact_flight_task
-
-load_fact_flight_task >> stop_spark_task
+transform_facts_and_dims_group >> stop_spark_task
 
 stop_spark_task >> end_pipeline_task

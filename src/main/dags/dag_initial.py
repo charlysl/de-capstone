@@ -7,6 +7,10 @@ from datetime import datetime
 from etl_spark_standalone import start_spark, stop_spark
 from etl_airflow_tasks import create_preprocess_i94_data_dictionary_task
 from operators.etl_spark_operator import ETLSparkOperator
+import stage_check_exchange_task_group as sce
+
+from datalake.datamodel.files.states_file import StatesFile
+
 
 dag = DAG(
   'de-capstone-etl-initial',
@@ -23,20 +27,21 @@ with dag:
     stop_spark_task = stop_spark()
     start_spark_task = start_spark()
 
-    with TaskGroup(group_id='init_dims_and_facts') as init_dims_and_facts_group:
+    with TaskGroup(group_id='init_dims_and_facts', prefix_group_id=False) as init_dims_and_facts_group:
         init_time_dim_task = ETLSparkOperator(name='init_time_dim')
         init_route_dim_task = ETLSparkOperator(name='init_route_dim')
         init_foreign_visitor_dim_task = ETLSparkOperator(name='init_foreign_visitor_dim')
         init_flight_fact_task = ETLSparkOperator(name='init_flight_fact')
 
-    with TaskGroup(group_id='reference_tables_preprocessing') as reference_tables_preprocessing_group:
-        clean_states_task = ETLSparkOperator(dag=dag, name='clean_states')
+    with TaskGroup(group_id='reference_tables_preprocessing', prefix_group_id=False) as reference_tables_preprocessing_group:
+        #clean_states_task = ETLSparkOperator(dag=dag, name='clean_states')
+        clean_states_task = sce.create_task_group('clean_states', StatesFile)
 
         process_i94_data_dictionary_task = (
             create_preprocess_i94_data_dictionary_task(dag)
         )
 
-    with TaskGroup(group_id='create_reference_tables') as create_reference_tables_group:
+    with TaskGroup(group_id='create_reference_tables', prefix_group_id=False) as create_reference_tables_group:
         clean_airport_task = ETLSparkOperator(name='clean_airports')
         clean_demographics_task = ETLSparkOperator(name='clean_demographics')
         clean_temperature_task = ETLSparkOperator(name='clean_temperatures')

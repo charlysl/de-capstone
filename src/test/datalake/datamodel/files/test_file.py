@@ -9,7 +9,7 @@ class TestFile(FileBase):
         super().__init__(
             'test',
             test_utils.create_schema(1),
-            self.staging,
+            self.curated,
             writable=True,
             **kwargs
         )

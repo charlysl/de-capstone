@@ -6,7 +6,7 @@ class ETLCheckBaseOperator(ETLSparkOperator):
     def __init__(self,
                 check=None,
                 table=None,
-                kind=None,
+                area=None,
                 column=None,
                 date=None,
                 **kwargs):
@@ -14,7 +14,7 @@ class ETLCheckBaseOperator(ETLSparkOperator):
         args = {}
         args['check']=check
         args['table']=table
-        args['kind']=kind
+        args['area']=area
         args['column']=column
         args['date']=date
         kwargs['application_args']=[json.dumps(args)]

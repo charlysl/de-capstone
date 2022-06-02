@@ -5,13 +5,13 @@ from datalake.model.file_base import FileBase
 
 
 """
-Load dimension given by argv[1] from staging into production.
+Load dataset given by argv[1] from staging.
 """
 
-def load_dimension():
+def load():
     file = get_file(sys.argv[1])
     df = file.read(area=FileBase.staging)
-    file.save(df, area=FileBase.production)
+    file.save(df)
 
 def get_file(file_class_name):
     file_module = 'datalake.datamodel.files'
@@ -40,4 +40,4 @@ def get_python_file_name(file_class):
     # i.e. time_dim_file
     return '_'.join(words).lower()
 
-load_dimension()
+load()
