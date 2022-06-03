@@ -149,6 +149,42 @@ class FileBaseTests(ETLTestBase):
         actual = FileBase.get_class_from_class_name('TestFile')
         self.assertEqual(TestFile, actual)
 
+    def test_overwrite_is_idempotent(self):
+        """
+        Both staging and loading tables must be idempotent.
+        Test that idempotency can be achieved on both S3
+        and hdfs by using Spark's 'overwrite' mode.
+        """
+        # Assert that d3 and hdfs are being used for storage.
+        # If not, reconfigure DATALAKE_ROOT and STAGING_ROOT env vars.
+        assert FileBase.get_datalake_root()[0:2] == 's3'
+        assert FileBase.get_staging_root()[0:4] == 'hdfs'
+
+        for area in ['staging', 'production']:
+            (file, _, _) = test_utils.create_file(
+                'test_overwrite_is_idempotent',
+                empty=False,
+                mode='overwrite',
+                writable=True
+            )
+
+            # write the file
+            data = 'the same data'
+            written_df1 = test_utils.create_df([[data]])
+            file.save(written_df1, area=area)
+
+            # write the file again
+            # To prevent ```java.io.FileNotFoundException```,
+            # recreate the data frame
+            written_df2 = test_utils.create_df([[data]])
+            file.save(written_df2, area=area)
+            read_df2 = file.read(area=area)
+
+            # if mode='overwrite' is idempotent given the same data frame,
+            # both reads must have returned the same data frame
+            self.assertEqual(written_df1.collect(), read_df2.collect())
+
+
     # helpers
 
     def _assert_read_equals_saved(self, actual_df, data):
