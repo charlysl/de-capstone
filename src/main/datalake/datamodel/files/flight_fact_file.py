@@ -19,7 +19,8 @@ class FlightFactFile(FileBase):
             "flight_fact",
             schema,
             self.production,
-            writable=True
+            writable=True,
+            partitions=['year', 'month_id']
         )
 
         self.add_check(self.Check.not_empty)
