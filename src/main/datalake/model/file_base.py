@@ -89,7 +89,9 @@ class FileBase():
             spark_helper.get_spark().read
             .pipe(self._set_options, self.options)
             .format(self.format)
-            .schema(self.schema)
+            .pipe(lambda reader: (
+                reader.schema(self.schema) if self.schema else reader)
+            )
             .load(self._path(area))
         )
 
@@ -226,7 +228,6 @@ class FileBase():
         file_module = 'datalake.datamodel.files'
         pfn = FileBase._get_python_file_name(file_class_name)
         file_module_class = f'{file_module}.{pfn}.{file_class_name}'
-        print('file_module_class', file_module_class)
         file_class = FileBase.get_class_from_full_name(file_module_class)
         return file_class
 
