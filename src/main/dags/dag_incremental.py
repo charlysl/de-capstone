@@ -11,6 +11,7 @@ import stage_check_exchange_task_group as sce
 
 from operators.etl_spark_operator import ETLSparkOperator
 
+from datalake.datamodel.files.immigration_file import ImmigrationFile
 from datalake.datamodel.files.time_dim_file import TimeDimFile
 from datalake.datamodel.files.route_dim_file import RouteDimFile
 from datalake.datamodel.files.visitor_dim_file import VisitorDimFile
@@ -34,13 +35,10 @@ with dag:
     end_pipeline_task = DummyOperator(task_id='end_pipeline')
     start_spark_task = start_spark()
     stop_spark_task = stop_spark()
-    clean_immigration_task = ETLSparkOperator(
-        name='clean_immigration',
-        #packages='saurfang:spark-sas7bdat:3.0.0-s_2.12',
-        #repositories='https://repos.spark-packages.org/'
-    )
+    clean_immigration_task = sce.create_task_group('clean_immigration', ImmigrationFile)
     with TaskGroup(
-            group_id='transform_facts_and_dims'
+            group_id='transform_facts_and_dims',
+            prefix_group_id=False
         ) as transform_facts_and_dims_group:
         dim_time_task = sce.create_task_group('dim_time', TimeDimFile)
         dim_route_task = sce.create_task_group('dim_route', RouteDimFile)
