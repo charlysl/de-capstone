@@ -1,5 +1,6 @@
 import sys
 import json
+import logging
 
 import pyspark.sql.functions as F
 
@@ -63,6 +64,7 @@ class ETLValidationDispatch():
         kwargs = self._unpack_application_kwargs()
 
         dfs = self._create_views(
+            kwargs['check'],
             self._to_array(kwargs.get('table')),
             self._to_array(kwargs.get('column'))
         )
@@ -75,12 +77,27 @@ class ETLValidationDispatch():
         # see https://stackoverflow.com/questions/3521715/call-a-python-method-by-nam
         getattr(ETLValidation(dfs[0]), check)(*dfs[1:])
 
-    def _create_views(self, tables, columns):
+    def _create_views(self, check, tables, columns):
+        """        
         return [(
             FileBase.get_class_from_class_name(tables[i])()
             .read(area=FileBase.staging)
             .select(*columns)
         ) for i in range(len(tables))]
+        """
+        views = []
+        for i in range(len(tables)):
+            view = (
+                FileBase.get_class_from_class_name(tables[i])()
+                .read(area=FileBase.staging)
+            )
+            if check == 'check_referential_integrity':
+                cols = columns[i] if len(columns) > 1 else columns[0]
+                view = view.select(cols)
+            else:
+                view = view.select(*columns)
+            views.append(view)
+        return views
 
     def _unpack_application_kwargs(self):
         # argv[1] is the script name, skip

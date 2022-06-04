@@ -2,18 +2,22 @@ import json
 
 from etl_spark_jobs.etl_spark_job_test_base import ETLSparkJobTestBase
 from etl_spark_jobs.etl_validation import ETLValidationDispatch, ETLValidation
+from datalake.datamodel.files.test_file import TestFile
+from datalake.datamodel.files.test_file2 import TestFile2
 
-from datalake.datamodel.files.states_file import StatesFile
 # TODO it would be better to either mock or create dummy file class
 
 
 class ETLValidationDispatchTest(ETLSparkJobTestBase):
 
-    test_table = 'datalake.datamodel.files.states_file.StatesFile'
+    def tearDown(self):
+        pass
 
     def test_dispatch_invalid_one_table_no_column(self):
 
-        self._save_empty_file(StatesFile())
+        self.test_table = 'TestFile'
+
+        self._save_empty_file(TestFile(), area='staging')
 
         argv = self._argv('check_not_empty')
         
@@ -24,9 +28,11 @@ class ETLValidationDispatchTest(ETLSparkJobTestBase):
 
     def test_dispatch_invalid_one_table_one_column(self):
 
-        self._save_nulls_file(StatesFile())
+        self.test_table = 'TestFile'
 
-        argv = self._argv('check_no_nulls', column='state_id')
+        self._save_nulls_file(TestFile())
+
+        argv = self._argv('check_no_nulls', column='col0')
         
         self.assertRaises(
             ETLValidation.HasNullsException,
@@ -35,11 +41,13 @@ class ETLValidationDispatchTest(ETLSparkJobTestBase):
 
     def test_dispatch_invalid_one_table_two_columns(self):
 
-        self._save_file_with_value(StatesFile(), 2, 1)
+        self.test_table = 'TestFile2'
+
+        self._save_file_with_value(TestFile2(), 2, 1)
 
         argv = self._argv(
             'check_no_duplicates',
-            column=['state_id', 'name']
+            column=['col0', 'col1']
         )
         
         self.assertRaises(
@@ -49,15 +57,13 @@ class ETLValidationDispatchTest(ETLSparkJobTestBase):
 
     def test_dispatch_invalid_two_tables_one_column(self):
 
-        self._save_file_with_value(StatesFile(), 1, 1)
-        self._save_file_with_value(StatesFile(), 1, 2, area=StatesFile.staging)
+        self._save_file_with_value(TestFile(), 1, 1)
+        self._save_file_with_value(TestFile2(), 1, 2)
 
-        table = ETLValidationDispatchTest.test_table
         argv = self._argv(
             'check_referential_integrity',
-            area=['curated', 'staging'],
-            column = ['state_id'],
-            table=[table, table]
+            column = ['col0'],
+            table=['TestFile', 'TestFile2']
         )
         
         self.assertRaises(
@@ -65,7 +71,26 @@ class ETLValidationDispatchTest(ETLSparkJobTestBase):
             ETLValidationDispatch(argv).dispatch,
         )
 
-    # do one with date on immigration
+    def test_dispatch_invalid_two_tables_two_columns(self):
+
+        self._save_file_with_value(TestFile(), 1, 1)
+        self._save_file_with_value(TestFile2(), 1, 2)
+
+        argv = self._argv(
+            'check_referential_integrity',
+            column = ['col1', 'col0'],
+            table=['TestFile2', 'TestFile']
+        )
+        print(argv)
+        
+        self.assertRaises(
+            ETLValidation.ReferentialIntegrityException,
+            ETLValidationDispatch(argv).dispatch,
+        )
+
+    def test_check_referential_integrity_integration(self):
+        argv = ['dummy', '{"check": "check_referential_integrity", "table": ["ImmigrationFile", "CountryFile"], "area": null, "column": ["residence_id", "country_id"], "date": "2016-01-01"}']
+        ETLValidationDispatch(argv).dispatch()
 
     # helpers
 
@@ -74,11 +99,11 @@ class ETLValidationDispatchTest(ETLSparkJobTestBase):
             check,
             column=None,
             area=None,
-            table=test_table
+            table=None
         ):
         args = {}
         args['check'] = check
-        args['table'] = table
+        args['table'] = self.test_table if not table else table
         args['column'] = column
         args['area'] = area
         return ['some_path', json.dumps(args)]
@@ -93,6 +118,7 @@ class ETLValidationDispatchTest(ETLSparkJobTestBase):
                             [value for _ in range(arity)]
                             for i in range(nrows)
                         ],
+                        area='staging', # validation always in staging
                         **kwargs)
 
 
