@@ -4,6 +4,7 @@ from datalake.model.file_base import FileBase
 
 from datetime import datetime
 
+"""
 schema = T.StructType([
     T.StructField('cicid', T.FloatType(), True),
     T.StructField('i94yr', T.FloatType(), True),
@@ -32,14 +33,22 @@ schema = T.StructType([
     T.StructField('airline', T.StringType(), True),
     T.StructField('admnum', T.FloatType(), True),
     T.StructField('fltno', T.StringType(), True),
-    T.StructField('visatype', T.StringType(), True)
+    T.StructField('visatype', T.StringType(), True),
+    # only in 2016-06-01:
+    T.StructField('validres', T.DoubleType(), True),
+    T.StructField('delete_days', T.DoubleType(), True),
+    T.StructField('delete_mexl', T.DoubleType(), True),
+    T.StructField('delete_dup', T.DoubleType(), True),
+    T.StructField('delete_visa', T.DoubleType(), True),
+    T.StructField('delete_recdup', T.DoubleType(), True),
 ])
+"""
 
 class SasFile(FileBase):
     def __init__(self, date):
         super().__init__(
             self.sas_file_path(date),
-            schema,
+            None, # schema is different for 2016-06
             self.raw,
             format='com.github.saurfang.sas.spark'
         )
