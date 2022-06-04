@@ -39,10 +39,7 @@ def visitor_dim_nk(df):
         .drop_duplicates()
     )
 
-def join_immigration_with_visitor_dim(df):
-    
-    visitor_dim = VisitorDimFile().read()
-    
+def join_immigration_with_visitor_dim(df, visitor_dim):
     return (
         df
         .join(
@@ -150,10 +147,13 @@ def project_schema(df):
         'stay'
     )
 
+def union_visitor_dim(df, visitor_dim):
+    return df.select(visitor_dim.columns).union(visitor_dim)
+
 def save_visitor_dim(df):
     VisitorDimFile().stage(df)
 
-def fill_missing_visitor(date):
+def fill_missing_visitor(date, visitor_dim):
     
     country = CountryFile().read()
     state = StatesFile().read()
@@ -163,7 +163,7 @@ def fill_missing_visitor(date):
         load_immigration()
         .pipe(spark_helper.filter_one_month, date)
         .pipe(visitor_dim_nk)
-        .pipe(join_immigration_with_visitor_dim)
+        .pipe(join_immigration_with_visitor_dim, visitor_dim)
         .pipe(fill_sk)
         .pipe(fill_country, country, 'citizenship_id', 'citizenship')
         .pipe(fill_country, country, 'residence_id', 'residence')
@@ -174,8 +174,12 @@ def fill_missing_visitor(date):
         .pipe(fill_climate, temperature)
         .pipe(fill_stay)
         .pipe(project_schema)
+        .pipe(union_visitor_dim, visitor_dim)
         .pipe(save_visitor_dim)
     )
 
 
-fill_missing_visitor(spark_helper.get_date())
+fill_missing_visitor(
+    spark_helper.get_date(),
+    VisitorDimFile().read()
+)

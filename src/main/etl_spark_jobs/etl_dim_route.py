@@ -24,10 +24,7 @@ def route_nk(df):
         .drop_duplicates()
     )
 
-def missing_routes(df):
-    
-    route_dim = RouteDimFile().read()
-    
+def missing_routes(df, route_dim):
     return (
         df
         .join(
@@ -77,6 +74,7 @@ def fill_airport(df):
             how='left'
         )
         .drop('airport_id')
+        .withColumnRenamed('airport_iata', 'dst_airport_iata')
         .withColumnRenamed('city', 'dst_city')
         .withColumnRenamed('state_id', 'dst_state_id')
         .withColumnRenamed('name', 'dst_airport_name')
@@ -140,21 +138,32 @@ def fill_temperature(df):
         .withColumnRenamed('climate', 'dst_state_climate')
     )
 
+def union_route_dim(df, route_dim):
+    return (
+        df
+        .select(route_dim.columns)   # arrange cols in same order before union
+        .union(route_dim)
+    )
+
 def save_route_dim(df):
     RouteDimFile().stage(df)
 
-def fill_missing_routes(date):
+def fill_missing_routes(date, route_dim):
     return (
         load_immigration()
         .pipe(spark_helper.filter_one_month, date)
         .pipe(route_nk)
-        .pipe(missing_routes)
+        .pipe(missing_routes, route_dim)
         .pipe(fill_sk)
         .pipe(fill_airport)
         .pipe(fill_demographics)
         .pipe(fill_state)
         .pipe(fill_temperature)
+        .pipe(union_route_dim, route_dim)
         .pipe(save_route_dim)
     )
 
-fill_missing_routes(spark_helper.get_date())
+fill_missing_routes(
+    spark_helper.get_date(),
+    RouteDimFile().read()
+)

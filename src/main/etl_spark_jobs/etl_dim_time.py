@@ -20,9 +20,7 @@ def time_dim_nk(df):
         .distinct()
     )
 
-def join_immigration_time_dim(df):
-    
-    time_dim_df = TimeDimFile().read()
+def join_immigration_time_dim(df, time_dim_df):
     
     return (
         df
@@ -46,17 +44,24 @@ def fill_time_dim(df):
         F.expr("DATE_FORMAT(arrival_date, 'E') IN ('Sat', 'Sun')").alias('weekend')
     )
 
+def union_time_dim(df, time_dim):
+    return df.union(time_dim)
+
 def save_time_dim(df):
     TimeDimFile().stage(df)
 
-def upsert_time_dim(date):
+def upsert_time_dim(date, time_dim):
     return (
         load_immigration()
         .pipe(spark_helper.filter_one_month, date)
         .pipe(time_dim_nk)
-        .pipe(join_immigration_time_dim)
+        .pipe(join_immigration_time_dim, time_dim)
         .pipe(fill_time_dim)
+        .pipe(union_time_dim, time_dim)
         .pipe(save_time_dim)
     )
 
-upsert_time_dim(spark_helper.get_date())
+upsert_time_dim(
+    spark_helper.get_date(),
+    TimeDimFile().read()
+)
