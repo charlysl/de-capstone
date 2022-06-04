@@ -19,7 +19,9 @@ schema = (
         T.StructField('gender', T.StringType(), False),
         T.StructField('visa', T.StringType(), False),
         T.StructField('stay', T.StringType(), False),
-        T.StructField('address', T.StringType(), False),
+        T.StructField('address_state', T.StringType(), False),
+        T.StructField('address_type_id', T.IntegerType(), False),
+        T.StructField('address_type', T.StringType(), False),
         T.StructField('address_climate', T.StringType(), False),
     ])
 )
