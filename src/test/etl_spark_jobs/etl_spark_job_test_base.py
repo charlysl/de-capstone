@@ -44,8 +44,8 @@ class ETLSparkJobTestBase(ETLTestBase):
         files = self.input_file
         return files if type(files) == list else [files]
 
-    def _save_empty_file(self, file):
-        self._save_file(file, [])
+    def _save_empty_file(self, file, **kwargs):
+        self._save_file(file, [], **kwargs)
 
     def _save_file(self, file, data, **kwargs):
         schema = file.schema
