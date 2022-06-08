@@ -37,10 +37,14 @@ def get_spark():
         builder = (
             SparkSession.builder.appName('de-capstone')
             .config('spark.sql.shuffle.partitions', 5)
-            .config('spark.executor.memory', '1g')
         )
 
-        spark_config(builder)
+        if not AwsHelper.is_running_in_emr():
+            """
+            If running in EMR, Spark configuration would already
+            have been passed as ```spark-submit --conf``` options.
+            """
+            spark_config(builder)
 
         spark[0] = builder.getOrCreate()
         
@@ -106,7 +110,8 @@ def spark_config(builder=None):
         'spark.jars.repositories': 'https://repos.spark-packages.org/',
         'spark.jars.packages': ','.join(spark_packages),
         'spark.hadoop.fs.s3a.access.key': AwsHelper.access_key(),
-        'spark.hadoop.fs.s3a.secret.key': AwsHelper.secret_key()
+        'spark.hadoop.fs.s3a.secret.key': AwsHelper.secret_key(),
+        'spark.executor.memory': '1g',
     }
 
     if builder:
@@ -114,4 +119,3 @@ def spark_config(builder=None):
             builder.config(key, config[key])
     else:
         return config
-
