@@ -4,8 +4,6 @@ from pyspark.ml.linalg import Vectors, VectorUDT
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-import pandas as pd
-
 from datalake.datamodel.files.raw_temperatures_file import RawTemperaturesFile 
 from datalake.datamodel.files.temperatures_file import TemperaturesFile
 from datalake.datamodel.files.states_file import StatesFile
@@ -88,15 +86,14 @@ def cluster_temperatures(df):
 
 def project_climate(df):
     
-    climate = spark_helper.get_spark().createDataFrame(
-        pd.DataFrame([
+    climate = spark_helper.get_spark().createDataFrame([
                 [4 , 3, 'warm'],
                 [0 , 1, 'continental'],
                 [1 , 2, 'temperate'],
                 [2 , 0, 'polar'],
                 [3 , 4, 'tropical']
-            ], columns=['cluster', 'climate_id', 'climate']
-        )
+        ],
+        ['cluster', 'climate_id', 'climate']
     )
     
     return (

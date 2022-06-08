@@ -4,7 +4,6 @@ from pyspark.ml.linalg import Vectors, VectorUDT
 import pyspark.sql.types as T
 import pyspark.sql.functions as F
 
-import pandas as pd
 import sys
 
 
@@ -94,27 +93,22 @@ def project_clusters(df):
     )
 
 def ethnicities():
-    
-    ethnicities_pd = pd.DataFrame([
-                                [0, 'white, black minority'],
-                                [6, 'white'],    
-                                [2, 'white, latino minority'],    
-                                [5, 'white, asian minority'],
-                                [4, 'black, white minority'],    
-                                [1, 'latino, white minority'],    
-                                [3, 'white latino']
-                    ], columns=['ethnicity_id', 'ethnicity']
-    )
-    
-    return spark_helper.get_spark().createDataFrame(
-        ethnicities_pd,
-        
+    return spark_helper.get_spark().createDataFrame([
+                                    [0, 'white, black minority'],
+                                    [6, 'white'],    
+                                    [2, 'white, latino minority'],    
+                                    [5, 'white, asian minority'],
+                                    [4, 'black, white minority'],    
+                                    [1, 'latino, white minority'],    
+                                    [3, 'white latino']
+                        ],
         # need explicit schema, otherwise ethnicity_id will be type long
         schema=T.StructType([
             T.StructField('ethnicity_id', T.IntegerType(), True),
             T.StructField('ethnicity', T.StringType(), True)
         ])
     )
+    
 
 def join_ethnicities(df):
     ethnicities_df = ethnicities()

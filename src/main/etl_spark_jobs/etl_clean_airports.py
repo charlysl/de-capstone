@@ -2,9 +2,6 @@ from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-import pandas as pd
-import sys
-
 from datalake.datamodel.files.raw_airports_file import RawAirportsFile
 from datalake.datamodel.files.airports_file import AirportsFile
 from datalake.datamodel.files.states_file import StatesFile
@@ -17,12 +14,10 @@ def load_airports():
 
 def filter_us_iso_countries(df):
     
-    us_iso_countries_pd = pd.DataFrame(
-        {'iso_country2': ['US', 'AS', 'FM', 'GU', 'MH', 'MP', 'PR', 'PW', 'VI']}
-    )
-    
-    us_iso_countries = spark_helper.get_spark().createDataFrame(us_iso_countries_pd)
-    
+    us_iso_countries = spark_helper.get_spark().createDataFrame(
+        [[c] for c in ['US', 'AS', 'FM', 'GU', 'MH', 'MP', 'PR', 'PW', 'VI']],
+        ['iso_country2']
+    )    
     return (
         df
         .join(
