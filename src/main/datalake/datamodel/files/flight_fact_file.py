@@ -20,7 +20,7 @@ class FlightFactFile(FileBase):
             schema,
             self.production,
             writable=True,
-            partitions=['year', 'month_id']
+            #partitions=['year', 'month_id']
         )
 
         self.add_check(self.Check.not_empty)
