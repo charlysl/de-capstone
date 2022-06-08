@@ -89,7 +89,7 @@ class ETLValidationDispatch():
         for i in range(len(tables)):
             view = (
                 FileBase.get_class_from_class_name(tables[i])()
-                .read(area=FileBase.staging)
+                .try_to_read_from_staging()
             )
             if check == 'check_referential_integrity':
                 cols = columns[i] if len(columns) > 1 else columns[0]
@@ -110,6 +110,7 @@ class ETLValidationDispatch():
             return [kwarg]
         else:
             return kwarg
+
 
 if __name__ == '__main__':
     ETLValidationDispatch(sys.argv).dispatch()
