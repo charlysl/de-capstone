@@ -4,7 +4,11 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.providers.amazon.aws.operators.s3 import S3FileTransformOperator
 
+from datalake.datamodel.files.raw_i94_data_dictionary_file import RawI94DataDictionaryFile
+from datalake.datamodel.files.i94_data_dictionary_file import I94DataDictionaryFile
+
 from airflow.models.variable import Variable
+
 
 def dummy_script(*args, **kwargs):
     print('dummy_script_args', args)
@@ -23,11 +27,23 @@ def create_preprocess_i94_data_dictionary_task(dag):
     task_id = 'i94_data_dictionary_task'
 
     if _is_datalake_in_S3():
+        # datalake and staging roots haven't been set yet
+        # for FileBase; do so explicitly:
+        datalake_root = Variable.get('datalake_root')
+        staging_root = Variable.get('staging_root')
         
+        raw_file = RawI94DataDictionaryFile()
+        raw_file.datalake_root = datalake_root
+        raw_file.staging_root = staging_root
+
+        curated_file = I94DataDictionaryFile()
+        curated_file.datalake_root = datalake_root
+        curated_file.staging_root = staging_root
+
         return S3FileTransformOperator(
             task_id=task_id,
-            source_s3_key='s3://de-capstone-2022/raw/I94_SAS_Labels_Descriptions.SAS',
-            dest_s3_key='s3://de-capstone-2022/curated/i94_data_dictionary.json',
+            source_s3_key=raw_file._path(),
+            dest_s3_key=curated_file._path(),
             transform_script=_get_script(),
             replace=True,
             dag=dag
