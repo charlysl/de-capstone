@@ -165,6 +165,36 @@ class FileBase():
             new_check['table'].extend([f'{t[0].upper()}{t[1:]}File' for t in tables])
         self.get_checks().append(new_check)
 
+
+    def try_to_read_from_staging(self):
+        """
+        Description: try to read the file from the staging area
+
+        Returns: DataFrame of file
+
+        Effects:
+        - if the file is already in staging: read it
+        - otherwise: read it from its default area=
+        """
+
+        """
+        This behaviour should be efficient enough:
+        - reference tables are typically small, so it shouldn't
+        be too inneficient to repeatedly read them from curated.
+        - dimension copies and partial fact tables should be in staging
+        anyway. It is because of these that it is important to try
+        to read the file from staging first, because otherwise we
+        would be reading the old dimensions and the whole facts, wrongly.
+        - an alternative design would have been to configure in the
+        checks from which are to read each file from.
+        """
+        try:
+            df = self.read(area=FileBase.staging)
+        except Exception:
+            # most likely the file was not in staging
+            df = self.read()
+        return df
+
     def _path(self, area=None):
         area = area if area else self.area
 
