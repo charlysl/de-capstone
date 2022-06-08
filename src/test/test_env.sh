@@ -6,5 +6,6 @@
 . ../../spark-standalone/env.sh
 
 main=~/DataEng2022/de-capstone/src/main
-export PYTHONPATH=$(pwd):$(pwd)/plugins:$main:$main/plugins:$PYTHONPATH
+#export PYTHONPATH=$(pwd):$(pwd)/plugins:$main:$main/plugins:$PYTHONPATH
+export PYTHONPATH=$(pwd):$main:$PYTHONPATH
 
